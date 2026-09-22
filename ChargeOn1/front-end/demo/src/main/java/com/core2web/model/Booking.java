@@ -11,13 +11,6 @@ public class Booking {
     public static final String STATUS_COMPLETED             = "COMPLETED";
     public static final String STATUS_CANCELLED             = "CANCELLED";
 
-    /*
-     * Booking dispatch priority.
-     *
-     * EMERGENCY -> highest priority
-     * INSTANT   -> second priority
-     * RESERVE   -> third priority
-     */
     public static final String TYPE_INSTANT   = "instant";
     public static final String TYPE_RESERVE   = "reserve";
     public static final String TYPE_EMERGENCY = "emergency";
@@ -34,30 +27,13 @@ public class Booking {
     private String driverId;
     private boolean isEmergency;
 
-    /*
-     * The type of booking selected by the owner.
-     *
-     * instant   = immediate booking
-     * reserve   = reserved/priority slot
-     * emergency = emergency booking
-     */
     private String bookingType;
 
-    /**
-     * Machine-readable pickup point. The human-readable {@link #location} label is
-     * kept alongside it, not replaced. Absent or 0/0 means "coordinates unknown".
-     */
     private double pickupLatitude;
     private double pickupLongitude;
 
-    /**
-     * When the owner's OTP was accepted, or "" if not yet verified.
-     */
     private String otpVerifiedAt;
 
-    /**
-     * The fare quoted to the customer, and its split, frozen at booking time.
-     */
     private double amount;
     private double serviceFee;
     private double driverPayout;
@@ -116,12 +92,6 @@ public class Booking {
         this.driverId = driverId;
         this.isEmergency = isEmergency;
 
-        /*
-         * Preserve backward compatibility.
-         *
-         * Existing code which creates a Booking without explicitly specifying
-         * bookingType will still work.
-         */
         this.bookingType = isEmergency
                 ? TYPE_EMERGENCY
                 : TYPE_INSTANT;
@@ -271,62 +241,40 @@ public class Booking {
         this.driverPayout = driverPayout;
     }
 
-    /**
-     * Fare to bill, falling back to a recomputation for bookings created before
-     * the amount was stored.
-     */
     public double fareToBill() {
         return amount > 0
                 ? amount
                 : Pricing.fare(kwh, isEmergency);
     }
 
-    /**
-     * Driver's cut, with the same legacy fallback as {@link #fareToBill()}.
-     */
     public double payoutToPay() {
         return driverPayout > 0
                 ? driverPayout
                 : Pricing.driverPayout(fareToBill());
     }
 
-    /**
-     * True once the owner has verified the OTP.
-     */
     public boolean isOtpVerified() {
         return otpVerifiedAt != null
                 && !otpVerifiedAt.isEmpty();
     }
 
-    /**
-     * Whether the owner may still withdraw this booking themselves.
-     */
     public boolean isCancellableByOwner() {
         return STATUS_QUEUED.equals(status)
                 || STATUS_ASSIGNED.equals(status)
                 || STATUS_PENDING_DRIVER_ACCEPT.equals(status);
     }
 
-    /**
-     * Admins may cancel anything that hasn't already finished or been cancelled.
-     */
     public boolean isCancellableByAdmin() {
         return !isCompleted()
                 && !STATUS_CANCELLED.equals(status);
     }
 
-    /**
-     * The driver may only ask for the code once they have arrived at the pickup.
-     */
     public boolean canVerifyOtp() {
         return !isOtpVerified()
                 && (STATUS_ARRIVED.equals(status)
                 || STATUS_EN_ROUTE.equals(status));
     }
 
-    /**
-     * True only when this booking carries a real pickup point.
-     */
     public boolean hasPickupCoordinates() {
         return pickupLatitude != 0
                 || pickupLongitude != 0;
@@ -334,9 +282,6 @@ public class Booking {
 
     private static final int SHORT_REF_LENGTH = 6;
 
-    /**
-     * Short human-readable booking reference.
-     */
     public String shortRef() {
 
         if (id == null || id.isEmpty()) {
@@ -354,9 +299,6 @@ public class Booking {
         return STATUS_COMPLETED.equals(status);
     }
 
-    /**
-     * An emergency dispatch that the driver has neither accepted nor rejected yet.
-     */
     public boolean isPendingDriverAccept() {
         return STATUS_PENDING_DRIVER_ACCEPT.equals(status);
     }
@@ -401,16 +343,10 @@ public class Booking {
         }
     }
 
-    /**
-     * Location and energy only.
-     */
     public String summaryLine() {
         return summaryLine(null);
     }
 
-    /**
-     * @param busCode resolved human-readable bus code
-     */
     public String summaryLine(String busCode) {
 
         StringBuilder sb = new StringBuilder();

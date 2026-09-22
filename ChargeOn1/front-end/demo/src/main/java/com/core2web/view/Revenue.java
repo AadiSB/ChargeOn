@@ -1,6 +1,3 @@
-
-
-
 package com.core2web.view;
 
 import java.io.File;
@@ -39,11 +36,9 @@ public class Revenue {
     private static final int CHART_HEIGHT = 160;
     private static final int CHART_AXIS_MARKS = 4;
 
-
     public static void show(Stage stage) {
         AdminDashboard.goTo("Revenue");
     }
-
 
     static ScrollPane buildMainContent() {
 
@@ -55,17 +50,8 @@ public class Revenue {
         Map<String, Double> last7Days =
                 walletController.getRevenueLast7Days();
 
-
-        /*
-         * Load subscription plans from Firestore once.
-         *
-         * The same list is used for:
-         * 1. Active subscription plan count
-         * 2. Subscription plans section below
-         */
         List<SubscriptionPlan> plans =
                 planController.getAllPlans();
-
 
         int activeSubscriptionPlans = 0;
 
@@ -76,12 +62,10 @@ public class Revenue {
             }
         }
 
-
         Label revenueTodayVal = kpiValueLabel(
                 formatINR((int) Math.round(revenueToday)),
                 "#10b981"
         );
-
 
         java.util.List<Double> dayValues =
                 new java.util.ArrayList<>(last7Days.values());
@@ -109,10 +93,8 @@ public class Revenue {
                     "vs. yesterday: no data";
         }
 
-
         Label revenueTodaySub =
                 kpiSubLabel(revenueTodaySubText);
-
 
         Label revenueMonthVal =
                 kpiValueLabel(
@@ -122,7 +104,6 @@ public class Revenue {
                         "#f8fafc"
                 );
 
-
         HBox kpiRow =
                 buildKpiRow(
                         revenueTodayVal,
@@ -131,20 +112,17 @@ public class Revenue {
                         activeSubscriptionPlans
                 );
 
-
         VBox chartHolder = new VBox();
 
         chartHolder.getChildren().add(
                 buildChartCard(last7Days)
         );
 
-
         content.getChildren().addAll(
                 kpiRow,
                 chartHolder,
                 buildSubscriptionsCard(plans)
         );
-
 
         ScrollPane scrollPane =
                 new ScrollPane(content);
@@ -157,7 +135,6 @@ public class Revenue {
 
         return scrollPane;
     }
-
 
     private static Label kpiValueLabel(
             String initialText,
@@ -176,7 +153,6 @@ public class Revenue {
         return l;
     }
 
-
     private static Label kpiSubLabel(
             String initialText
     ) {
@@ -191,7 +167,6 @@ public class Revenue {
         return l;
     }
 
-
     private static HBox buildKpiRow(
             Label revenueTodayVal,
             Label revenueTodaySub,
@@ -201,7 +176,6 @@ public class Revenue {
 
         HBox row =
                 new HBox(16);
-
 
         VBox revenueTodayCard =
                 card("Revenue today");
@@ -215,7 +189,6 @@ public class Revenue {
                 revenueTodayCard,
                 Priority.ALWAYS
         );
-
 
         VBox revenueMonthCard =
                 card("Revenue this month");
@@ -232,7 +205,6 @@ public class Revenue {
                 revenueMonthCard,
                 Priority.ALWAYS
         );
-
 
         row.getChildren().addAll(
 
@@ -260,7 +232,6 @@ public class Revenue {
         return row;
     }
 
-
     private static VBox buildChartCard(
             Map<String, Double> revenueByDay
     ) {
@@ -276,14 +247,12 @@ public class Revenue {
                 new Insets(18)
         );
 
-
         HBox header =
                 new HBox();
 
         header.setAlignment(
                 Pos.CENTER_LEFT
         );
-
 
         Label title =
                 new Label(
@@ -294,7 +263,6 @@ public class Revenue {
                 "section-title"
         );
 
-
         Region spacer =
                 new Region();
 
@@ -303,7 +271,6 @@ public class Revenue {
                 Priority.ALWAYS
         );
 
-
         Button exportButton =
                 new Button("Export report");
 
@@ -311,11 +278,9 @@ public class Revenue {
                 "secondary-btn"
         );
 
-
         exportButton.setOnAction(
                 e -> exportReport(revenueByDay)
         );
-
 
         header.getChildren().addAll(
                 title,
@@ -323,11 +288,9 @@ public class Revenue {
                 exportButton
         );
 
-
         String[] days =
                 revenueByDay.keySet()
                         .toArray(new String[0]);
-
 
         int[] values =
                 new int[days.length];
@@ -341,7 +304,6 @@ public class Revenue {
                     (int) Math.round(v);
         }
 
-
         int maxValue = 0;
 
         for (int v : values) {
@@ -353,10 +315,8 @@ public class Revenue {
                     );
         }
 
-
         int scaleMax =
                 niceScaleMax(maxValue);
-
 
         HBox chartRow =
                 new HBox(0);
@@ -364,7 +324,6 @@ public class Revenue {
         chartRow.setAlignment(
                 Pos.BOTTOM_LEFT
         );
-
 
         chartRow.getChildren().addAll(
                 buildAxis(scaleMax),
@@ -375,7 +334,6 @@ public class Revenue {
                 )
         );
 
-
         card.getChildren().addAll(
                 header,
                 chartRow
@@ -384,13 +342,6 @@ public class Revenue {
         return card;
     }
 
-
-    /**
-     * Rounds {@code maxValue} up to a "nice" axis ceiling (1/2/5 x a power of
-     * ten) so the tallest bar always fills most of the chart height, whether
-     * daily revenue is in the hundreds or in lakhs — instead of measuring
-     * every day against a fixed ceiling that dwarfs small values.
-     */
     private static int niceScaleMax(
             int maxValue
     ) {
@@ -422,7 +373,6 @@ public class Revenue {
         );
     }
 
-
     private static VBox buildAxis(
             int scaleMax
     ) {
@@ -443,9 +393,7 @@ public class Revenue {
                 )
         );
 
-
         int marks = CHART_AXIS_MARKS;
-
 
         for (int i = 0;
              i <= marks;
@@ -455,28 +403,23 @@ public class Revenue {
                     scaleMax -
                     (scaleMax / marks) * i;
 
-
             Label label =
                     new Label(
                             formatINR(value)
                     );
-
 
             label.setStyle(
                     "-fx-text-fill:#64748b;" +
                     "-fx-font-size:10px;"
             );
 
-
             label.setPrefHeight(
                     (double) CHART_HEIGHT / marks
             );
 
-
             label.setAlignment(
                     Pos.CENTER_RIGHT
             );
-
 
             axis.getChildren().add(
                     label
@@ -485,7 +428,6 @@ public class Revenue {
 
         return axis;
     }
-
 
     private static HBox buildBars(
             String[] days,
@@ -499,7 +441,6 @@ public class Revenue {
         chart.setAlignment(
                 Pos.BOTTOM_LEFT
         );
-
 
         for (int i = 0;
              i < values.length;
@@ -515,7 +456,6 @@ public class Revenue {
             );
         }
 
-
         HBox.setHgrow(
                 chart,
                 Priority.ALWAYS
@@ -523,7 +463,6 @@ public class Revenue {
 
         return chart;
     }
-
 
     private static VBox barColumn(
             String day,
@@ -539,12 +478,10 @@ public class Revenue {
                 Pos.BOTTOM_CENTER
         );
 
-
         Label valueLabel =
                 new Label(
                         formatINRShort(value)
                 );
-
 
         valueLabel.setStyle(
                 "-fx-text-fill:" +
@@ -555,7 +492,6 @@ public class Revenue {
                 "-fx-font-size:10px;" +
                 "-fx-font-weight:bold;"
         );
-
 
         Region bar =
                 new Region();
@@ -570,7 +506,6 @@ public class Revenue {
                 )
         );
 
-
         bar.setStyle(
                 "-fx-background-color:" +
                 (highlight
@@ -579,7 +514,6 @@ public class Revenue {
                 ";" +
                 "-fx-background-radius:6 6 0 0;"
         );
-
 
         column.getChildren().addAll(
                 valueLabel,
@@ -590,7 +524,6 @@ public class Revenue {
                 )
         );
 
-
         HBox.setHgrow(
                 column,
                 Priority.ALWAYS
@@ -599,13 +532,6 @@ public class Revenue {
         return column;
     }
 
-
-    /*
-     * Subscription plans are now loaded from Firestore.
-     *
-     * Existing Revenue UI is preserved.
-     * Status is taken from SubscriptionPlan.active.
-     */
     private static VBox buildSubscriptionsCard(
             List<SubscriptionPlan> plans
     ) {
@@ -621,14 +547,12 @@ public class Revenue {
                 new Insets(18)
         );
 
-
         HBox header =
                 new HBox();
 
         header.setAlignment(
                 Pos.CENTER_LEFT
         );
-
 
         Label title =
                 new Label(
@@ -639,7 +563,6 @@ public class Revenue {
                 "booking-stage"
         );
 
-
         Region spacer =
                 new Region();
 
@@ -648,7 +571,6 @@ public class Revenue {
                 Priority.ALWAYS
         );
 
-
         Button manageButton =
                 new Button("+ Manage plans");
 
@@ -656,18 +578,15 @@ public class Revenue {
                 "primary-btn"
         );
 
-
         manageButton.setOnAction(
                 e -> SubscriptionPlanManagement.show()
         );
-
 
         header.getChildren().addAll(
                 title,
                 spacer,
                 manageButton
         );
-
 
         HBox columnHeaders =
                 new HBox();
@@ -680,7 +599,6 @@ public class Revenue {
                         12
                 )
         );
-
 
         columnHeaders.getChildren().addAll(
 
@@ -695,15 +613,9 @@ public class Revenue {
                 colLabel("STATUS", 100)
         );
 
-
         VBox rows =
                 new VBox(2);
 
-
-        /*
-         * Build Revenue rows from the actual Firestore
-         * subscription plans.
-         */
         for (SubscriptionPlan plan : plans) {
 
             String status =
@@ -715,7 +627,6 @@ public class Revenue {
                     plan.isActive()
                             ? "#10b981"
                             : "#ef4444";
-
 
             String price;
 
@@ -741,7 +652,6 @@ public class Revenue {
                         plan.getBillingCycle().toLowerCase();
             }
 
-
             rows.getChildren().add(
 
                     planRow(
@@ -755,11 +665,6 @@ public class Revenue {
             );
         }
 
-
-        /*
-         * If no plans exist, show a small message instead
-         * of leaving the section looking broken.
-         */
         if (plans.isEmpty()) {
 
             Label empty =
@@ -777,7 +682,6 @@ public class Revenue {
             );
         }
 
-
         card.getChildren().addAll(
                 header,
                 columnHeaders,
@@ -786,7 +690,6 @@ public class Revenue {
 
         return card;
     }
-
 
     private static HBox planRow(
             String plan,
@@ -812,11 +715,9 @@ public class Revenue {
                 "booking-row"
         );
 
-
         row.setOnMouseClicked(
                 e -> SubscriptionPlanManagement.show()
         );
-
 
         Label planLabel =
                 new Label(plan);
@@ -830,7 +731,6 @@ public class Revenue {
         planLabel.setPrefWidth(160);
         planLabel.setMinWidth(160);
 
-
         Label priceLabel =
                 new Label(price);
 
@@ -841,7 +741,6 @@ public class Revenue {
 
         priceLabel.setPrefWidth(100);
         priceLabel.setMinWidth(100);
-
 
         Label subscriberLabel =
                 new Label(subscribers);
@@ -854,7 +753,6 @@ public class Revenue {
         subscriberLabel.setPrefWidth(120);
         subscriberLabel.setMinWidth(120);
 
-
         Label mrrLabel =
                 new Label(mrr);
 
@@ -866,7 +764,6 @@ public class Revenue {
 
         mrrLabel.setPrefWidth(110);
         mrrLabel.setMinWidth(110);
-
 
         row.getChildren().addAll(
                 planLabel,
@@ -882,7 +779,6 @@ public class Revenue {
 
         return row;
     }
-
 
     private static void exportReport(
             Map<String, Double> revenueByDay
@@ -906,15 +802,12 @@ public class Revenue {
                 )
         );
 
-
         File file =
                 fileChooser.showSaveDialog(null);
-
 
         if (file == null) {
             return;
         }
-
 
         try (PrintWriter writer =
                      new PrintWriter(
@@ -932,7 +825,6 @@ public class Revenue {
             );
 
             double total = 0;
-
 
             for (Map.Entry<String, Double> entry :
                     revenueByDay.entrySet()) {
@@ -952,7 +844,6 @@ public class Revenue {
                 total += revenue;
             }
 
-
             writer.println();
 
             writer.println(
@@ -963,19 +854,16 @@ public class Revenue {
                             )
             );
 
-
             System.out.println(
                     "Revenue report saved to: "
                             + file.getAbsolutePath()
             );
-
 
         } catch (IOException ex) {
 
             ex.printStackTrace();
         }
     }
-
 
     private static String formatINR(
             int amount
@@ -988,12 +876,10 @@ public class Revenue {
             return "₹" + s;
         }
 
-
         String last3 =
                 s.substring(
                         s.length() - 3
                 );
-
 
         String rest =
                 s.substring(
@@ -1001,12 +887,10 @@ public class Revenue {
                         s.length() - 3
                 );
 
-
         StringBuilder grouped =
                 new StringBuilder();
 
         int count = 0;
-
 
         for (int i = rest.length() - 1;
              i >= 0;
@@ -1019,7 +903,6 @@ public class Revenue {
 
             count++;
 
-
             if (count % 2 == 0 &&
                     i != 0) {
 
@@ -1030,13 +913,11 @@ public class Revenue {
             }
         }
 
-
         return "₹" +
                 grouped +
                 "," +
                 last3;
     }
-
 
     private static String formatINRShort(
             int amount

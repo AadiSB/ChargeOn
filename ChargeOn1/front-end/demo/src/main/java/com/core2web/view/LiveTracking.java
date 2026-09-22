@@ -43,10 +43,6 @@ public class LiveTracking {
     private static final BusController busController =
             new BusController();
 
-    /**
-     * The tracking map, held so its pulse animation can be stopped
-     * on teardown.
-     */
     private GluonMapPane mapPane;
 
     Scene getLiveTrackingScene() {
@@ -83,45 +79,18 @@ public class LiveTracking {
 
     private void loadBooking(VBox content) {
 
-        /*
-         * Existing booking read.
-         *
-         * This comes through BookingController / Firestore.
-         */
         com.core2web.model.Booking booking =
                 bookingController.getMyUpcomingBooking();
 
-        /*
-         * Existing vehicle read.
-         */
         List<Vehicle> vehicles =
                 vehicleController.getMyVehicles();
 
-        /*
-         * KEEP THIS EXISTING FUNCTIONALITY.
-         *
-         * BusLocation is still used for the header's
-         * live/fresh/stale status.
-         *
-         * It is NOT used for the driver's map coordinates.
-         */
         BusLocation busLocation =
                 booking == null
                         ? null
                         : busLocationController.getLocationForBus(
                                 booking.getBusId());
 
-        /*
-         * IMPORTANT:
-         *
-         * The map must only start after:
-         *
-         * 1. Driver has accepted/confirmed the ride.
-         * 2. Admin-assigned driver exists for this booking.
-         *
-         * Therefore, do not even geocode the depot before
-         * these conditions are satisfied.
-         */
         if (!isRideConfirmed(booking)) {
 
             populateContent(
@@ -135,22 +104,9 @@ public class LiveTracking {
             return;
         }
 
-        /*
-         * Find the driver that admin assigned to the bus
-         * used by this booking.
-         *
-         * Booking.busId
-         *       ↓
-         * Driver.assignedBusId
-         */
         Driver driver =
                 getDriverForBooking(booking);
 
-        /*
-         * No admin-assigned driver yet.
-         *
-         * Do NOT show driver location or route.
-         */
         if (driver == null) {
 
             populateContent(
@@ -164,23 +120,9 @@ public class LiveTracking {
             return;
         }
 
-        /*
-         * Driver exists.
-         *
-         * Now read the driver's depot from Firestore.
-         *
-         * Example:
-         *
-         * Driver document:
-         *
-         * depot = "katraj"
-         */
         String depot =
                 driver.getDepot();
 
-        /*
-         * Driver exists but depot is not configured.
-         */
         if (depot == null
                 || depot.trim().isEmpty()) {
 
@@ -195,13 +137,6 @@ public class LiveTracking {
             return;
         }
 
-        /*
-         * Geocoding is a network operation, so do NOT perform it
-         * on the JavaFX application thread.
-         *
-         * This is the SAME GeocodingService mechanism already
-         * used in BookCharging.java.
-         */
         Thread geocoder =
                 new Thread(() -> {
 
@@ -237,12 +172,6 @@ public class LiveTracking {
         geocoder.start();
     }
 
-    /**
-     * The driver's map must only become active after the
-     * driver has accepted/confirmed the ride.
-     *
-     * CONFIRMED is followed by the existing tracking states.
-     */
     private boolean isRideConfirmed(
             com.core2web.model.Booking booking) {
 
@@ -357,11 +286,6 @@ public class LiveTracking {
                 hsp,
                 Priority.ALWAYS);
 
-        /*
-         * EXISTING BUS LOCATION STATUS
-         *
-         * This remains unchanged.
-         */
         boolean hasBusFix =
                 busLocation != null
                         && busLocation.hasCoordinates();
@@ -399,11 +323,6 @@ public class LiveTracking {
                 hsp,
                 liveDot);
 
-        /*
-         * EXISTING MAP CARD.
-         *
-         * Only its data source has been changed.
-         */
         javafx.scene.layout.Region mapPaneRegion =
                 buildMapArea(
                         booking,
@@ -574,23 +493,6 @@ public class LiveTracking {
                 .add(main);
     }
 
-    /**
-     * Finds the ADMIN-ASSIGNED driver for this booking.
-     *
-     * Booking.busId
-     *       ↓
-     * Bus.assignedDriverId   (source of truth for the link, see
-     *                         DriverController.repairBusLinks)
-     *       ↓
-     * Driver.depot
-     *
-     * Resolved as a single Bus get + a single Driver get. The Driver
-     * collection's "list" is admin-only in firestore.rules — an Owner
-     * session may only get() one driver doc at a time, so scanning
-     * DriverController.getAllDrivers() here would silently return
-     * nothing (permission denied) for the very role that uses this
-     * screen.
-     */
     private Driver getDriverForBooking(
             com.core2web.model.Booking booking) {
 
@@ -615,50 +517,21 @@ public class LiveTracking {
                 bus.getAssignedDriverId());
     }
 
-    /**
-     * Creates the tracking map.
-     *
-     * DRIVER:
-     *
-     * Driver.depot from Firebase
-     *       ↓
-     * GeocodingService
-     *       ↓
-     * latitude / longitude
-     *
-     * OWNER:
-     *
-     * Existing booking pickupLatitude/pickupLongitude
-     *
-     * BusLocation is NOT used for the driver marker.
-     */
     private javafx.scene.layout.Region buildMapArea(
             com.core2web.model.Booking booking,
             Driver driver,
             GeocodingService.Result depotPoint) {
 
-        /*
-         * Existing owner pickup coordinate handling.
-         */
         boolean hasPickup =
                 booking != null
                         && booking.hasPickupCoordinates();
 
-        /*
-         * Driver depot can only be considered available when:
-         *
-         * - a driver was assigned
-         * - geocoding succeeded
-         */
         boolean hasDriverDepot =
                 driver != null
                         && depotPoint != null;
 
         String missing;
 
-        /*
-         * Driver has NOT accepted/confirmed the ride yet.
-         */
         if (!isRideConfirmed(booking)) {
 
             missing =
@@ -667,10 +540,6 @@ public class LiveTracking {
 
         } else if (driver == null) {
 
-            /*
-             * Ride is confirmed, but admin has not assigned
-             * a driver/bus relationship.
-             */
             missing =
                     "Live tracking will appear after a driver "
                     + "has been assigned.";
@@ -709,35 +578,18 @@ public class LiveTracking {
             missing = "";
         }
 
-        /*
-         * Both points are required for the map route.
-         */
         if (!hasPickup || !hasDriverDepot) {
 
             return MapPlaceholder.of(
                     missing);
         }
 
-        /*
-         * DRIVER LOCATION
-         *
-         * These coordinates came from:
-         *
-         * Firebase Driver.depot
-         *          ↓
-         * GeocodingService.geocode()
-         */
         double driverLatitude =
                 depotPoint.latitude;
 
         double driverLongitude =
                 depotPoint.longitude;
 
-        /*
-         * OWNER LOCATION
-         *
-         * Existing owner pickup coordinates.
-         */
         double ownerLatitude =
                 booking.getPickupLatitude();
 
@@ -747,22 +599,12 @@ public class LiveTracking {
         List<GluonMapPane.Marker> markers =
                 new ArrayList<>();
 
-        /*
-         * OWNER MARKER
-         *
-         * Existing green marker.
-         */
         markers.add(
                 new GluonMapPane.Marker(
                         ownerLatitude,
                         ownerLongitude,
                         "#10B981"));
 
-        /*
-         * DRIVER MARKER
-         *
-         * Always yellow.
-         */
         markers.add(
                 new GluonMapPane.Marker(
                         driverLatitude,
@@ -770,9 +612,6 @@ public class LiveTracking {
                         "#F59E0B",
                         true));
 
-        /*
-         * Existing map centering behavior.
-         */
         double centerLat =
                 (ownerLatitude
                         + driverLatitude)
@@ -790,13 +629,6 @@ public class LiveTracking {
                         13.0,
                         markers);
 
-        /*
-         * Route:
-         *
-         * DRIVER DEPOT
-         *       ↓
-         * OWNER PICKUP
-         */
         mapPane.setRoute(
                 driverLatitude,
                 driverLongitude,
@@ -941,10 +773,6 @@ public class LiveTracking {
         return tracker;
     }
 
-    /**
-     * The owner's pickup code, shown large enough to read aloud.
-     * Hidden once verified.
-     */
     private VBox buildOtpRow(
             com.core2web.model.Booking booking) {
 

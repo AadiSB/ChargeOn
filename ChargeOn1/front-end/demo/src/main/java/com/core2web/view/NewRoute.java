@@ -159,19 +159,6 @@ public class NewRoute {
 
         Label busLabel = fieldLabel("Assigned bus");
 
-        /*
-         * Use Bus objects instead of String.
-         *
-         * Displayed value:
-         * BUS01 · Baner
-         *
-         * Saved value:
-         * Actual Firestore bus document ID
-         *
-         * Any bus in the fleet can be selected.
-         * A bus previously assigned to another route
-         * is still allowed.
-         */
         ComboBox<Bus> busBox = new ComboBox<>();
 
         busBox.setPromptText("Select a bus");
@@ -206,13 +193,6 @@ public class NewRoute {
             }
         });
 
-        /*
-         * Get ALL buses from Firestore.
-         *
-         * Do NOT filter based on previous route assignments.
-         * This allows old/previously assigned buses to be reused
-         * when creating another route.
-         */
         List<Bus> buses = busController.getAllBuses();
 
         busBox.getItems().setAll(buses);
@@ -331,18 +311,8 @@ public class NewRoute {
                             ? ""
                             : frequencyBox.getValue();
 
-            /*
-             * Get the selected Bus object.
-             */
             Bus selectedBus = busBox.getValue();
 
-            /*
-             * Save the Firestore document ID,
-             * NOT the visible bus code.
-             *
-             * final is important because this value
-             * is used inside the Thread lambda below.
-             */
             final String assignedBusId =
                     selectedBus == null || selectedBus.getId() == null
                             ? ""

@@ -1,4 +1,3 @@
-
 package com.core2web.dao;
 
 import java.net.URI;
@@ -24,7 +23,6 @@ public class OwnerDao {
     public OwnerDao() {
         client = HttpClient.newHttpClient();
     }
-
 
     public Owner getCurrentOwner() {
 
@@ -99,7 +97,6 @@ public class OwnerDao {
         }
     }
 
-
     public List<Owner> getAllOwners(String idToken) {
         List<JSONObject> docs = FirestoreHelper.listCollection(COLLECTION, idToken);
         List<Owner> owners = new ArrayList<>();
@@ -114,14 +111,6 @@ public class OwnerDao {
         return owners;
     }
 
-
-    /**
-     * One owner by uid, as a single document read.
-     *
-     * <p>Deliberately not "scan {@link #getAllOwners} and filter": that needs
-     * collection-wide {@code list} permission, which would force the security rules
-     * to let any driver enumerate every customer just to show one requester's name.
-     */
     public Owner getOwner(String uid, String idToken) {
         if (uid == null || uid.isEmpty() || "null".equals(uid)) {
             return null;
@@ -129,7 +118,6 @@ public class OwnerDao {
         JSONObject doc = FirestoreHelper.getDocument(COLLECTION, uid, idToken);
         return doc == null ? null : fromDocument(uid, doc);
     }
-
 
     private Owner fromDocument(String uid, JSONObject doc) {
         JSONObject fields = doc.optJSONObject("fields");
@@ -147,7 +135,6 @@ public class OwnerDao {
         owner.setProfileImageUrl(getStringField(fields, "profileImageUrl"));
         return owner;
     }
-
 
     public boolean updatePhone(String phone) {
 
@@ -220,7 +207,6 @@ public class OwnerDao {
             return false;
         }
     }
-
 
 public boolean updateProfileImageUrl(String imageUrl) {
 
@@ -300,7 +286,6 @@ public boolean updateProfileImageUrl(String imageUrl) {
     }
 }
 
-
     public boolean updateSubscription(String planId, String planName) {
 
         AuthSession session = AuthSession.getCurrent();
@@ -374,8 +359,6 @@ public boolean updateProfileImageUrl(String imageUrl) {
             return false;
         }
     }
-
-
 
     private String getStringField(JSONObject fields, String fieldName) {
 

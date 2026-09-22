@@ -89,10 +89,6 @@ public class CopilotController {
         });
     }
 
-    /**
-     * The chat UI renders plain text, so Markdown emphasis/bullets (*, **) would
-     * otherwise show up as literal asterisks instead of being styled.
-     */
     private static String stripMarkdownAsterisks(String text) {
         if (text == null) {
             return text;

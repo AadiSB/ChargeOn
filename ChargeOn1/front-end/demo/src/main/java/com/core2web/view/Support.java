@@ -74,13 +74,13 @@ public class Support {
 
         Label tabAll = filterTab("All", false);
         Label tabOpen = filterTab("Open", true);
-        
+
         Label tabResolved = filterTab("Resolved", false);
         Label[] allTabs = { tabAll, tabOpen, tabResolved };
 
         tabAll.setOnMouseClicked(e -> selectFilter(allTabs, tabAll, rows, "ALL", state, detailHolder));
         tabOpen.setOnMouseClicked(e -> selectFilter(allTabs, tabOpen, rows, "OPEN", state, detailHolder));
-   
+
         tabResolved.setOnMouseClicked(e -> selectFilter(allTabs, tabResolved, rows, "RESOLVED", state, detailHolder));
 
         HBox tabs = new HBox(2, tabAll, tabOpen, tabResolved);
@@ -164,7 +164,6 @@ public class Support {
         return row;
     }
 
-
     private static VBox buildTicketDetail(Ticket t) {
         VBox card = new VBox(12);
         card.getStyleClass().add("assignment-card");
@@ -200,7 +199,6 @@ public class Support {
         meta.setPadding(new Insets(12));
         List<HBox> metaRows = new ArrayList<>();
         if (!t.getBookingId().isEmpty()) metaRows.add(metaRow("Booking", t.getBookingId()));
-        // busId is an opaque doc ID; show the bus code instead.
         if (!t.getBusId().isEmpty()) {
             metaRows.add(metaRow("Bus", busController.busCodeFor(t.getBusId(), "unknown bus")));
         }

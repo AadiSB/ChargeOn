@@ -13,13 +13,11 @@ import com.core2web.model.AuthSession;
 import com.core2web.model.Bus;
 import com.core2web.model.Driver;
 
-
 public class DriverController {
 
     private final DriverDao driverDao = new DriverDao();
     private final BusDao busDao = new BusDao();
 
-    /** Outcome of {@link #repairBusLinks()}, for reporting back to the admin. */
     public static final class LinkRepairReport {
 
         public final List<String> repaired = new ArrayList<>();
@@ -55,19 +53,6 @@ public class DriverController {
         }
     }
 
-    /**
-     * Rewrites drifted driver<->bus links so both sides agree.
-     *
-     * <p>{@code Bus.assignedDriverId} is the source of truth, so where a bus names a
-     * driver, that driver's {@code assignedBusId} is rewritten to the bus's document
-     * ID. This is what corrects a value holding a busCode ("BUS05") instead of a doc
-     * ID, a blank value, or a value left pointing at a reassigned bus.
-     *
-     * <p>Where no bus claims a driver but the driver claims a bus, the link is
-     * adopted only if that bus is genuinely free. Anything genuinely ambiguous — two
-     * buses claiming one driver, a driver claiming someone else's bus, a pointer to a
-     * bus that does not exist — is reported and left untouched rather than guessed at.
-     */
     public LinkRepairReport repairBusLinks() {
         LinkRepairReport report = new LinkRepairReport();
 
@@ -98,7 +83,6 @@ public class DriverController {
             }
         }
 
-        // Pass 1 — the authoritative direction: every bus that names a driver.
         Map<String, Bus> claimedDrivers = new HashMap<>();
         Set<String> ambiguousDrivers = new HashSet<>();
         for (Bus bus : buses) {
@@ -142,7 +126,6 @@ public class DriverController {
             }
         }
 
-        // Pass 2 — drivers nobody claims, but who claim a bus themselves.
         for (Driver driver : drivers) {
             if (claimedDrivers.containsKey(driver.getUid())) {
                 continue;
@@ -170,7 +153,6 @@ public class DriverController {
                 continue;
             }
 
-            // The bus is free and the driver claims it: complete the link both ways.
             if (driverDao.linkDriverAndBus(driver.getUid(), target.getId(), idToken)) {
                 report.repaired.add(driver.getName() + ": linked to " + target.getBusCode()
                         + " on both sides (bus had no driver).");
@@ -214,11 +196,6 @@ public class DriverController {
         return driverDao.addDriver(driver, password);
     }
 
-    /**
-     * Creates a driver and links them to {@code busId} on both sides
-     * (Driver.assignedBusId and Bus.assignedDriverId). Returns false if either side
-     * could not be written, rather than leaving a half-written link.
-     */
     public boolean addDriverWithBus(String name, String email, String phone,
                                     String busId, String depot, String shift,
                                     String password) {
@@ -238,7 +215,6 @@ public class DriverController {
         return driverDao.addDriverAndAssignBus(driver, password, busId) != null;
     }
 
-    /** One driver by uid — a single document read, not a roster scan. */
     public Driver getDriver(String driverUid) {
         AuthSession session = AuthSession.getCurrent();
         if (session == null) {
@@ -247,11 +223,6 @@ public class DriverController {
         return driverDao.getDriver(driverUid, session.getIdToken());
     }
 
-    /**
-     * Re-points an existing driver at a different bus, keeping both sides in step.
-     * Also releases the bus's previous holder — see
-     * {@link DriverDao#linkDriverAndBus}.
-     */
     public boolean assignBusToDriver(String driverUid, String busId) {
         AuthSession session = AuthSession.getCurrent();
         if (session == null) {

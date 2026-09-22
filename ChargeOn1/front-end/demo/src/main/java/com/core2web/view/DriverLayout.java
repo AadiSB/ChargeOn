@@ -1,4 +1,3 @@
-
 package com.core2web.view;
 
 import javafx.geometry.Insets;
@@ -24,13 +23,11 @@ import com.core2web.model.Driver;
 
 public class DriverLayout {
 
-
     private static StackPane profileAvatar;
     private static Label profileInitials;
     private static Label profileName;
 
     private static final DriverController driverController = new DriverController();
-
 
     public static VBox buildSidebar(ListView<String> nav, Stage stage) {
 
@@ -67,7 +64,6 @@ public class DriverLayout {
         return sb;
     }
 
-
     public static HBox buildTopBar(
             Label heading,
             Label subheading) {
@@ -81,7 +77,6 @@ public class DriverLayout {
         );
 
         bar.setAlignment(Pos.CENTER_LEFT);
-
 
         HBox logoRow = new HBox(6);
 
@@ -123,14 +118,12 @@ public class DriverLayout {
                 Pos.CENTER_LEFT
         );
 
-
         VBox left = new VBox(2);
 
         left.getChildren().addAll(
                 heading,
                 subheading
         );
-
 
         TextField search = new TextField();
 
@@ -144,14 +137,12 @@ public class DriverLayout {
 
         search.setPrefWidth(320);
 
-
         Region spacer = new Region();
 
         HBox.setHgrow(
                 spacer,
                 Priority.ALWAYS
         );
-
 
         HBox gps = new HBox(
                 6,
@@ -170,7 +161,6 @@ public class DriverLayout {
         gps.getStyleClass().add(
                 "gps-pill"
         );
-
 
         StackPane bell = new StackPane();
 
@@ -206,7 +196,6 @@ public class DriverLayout {
                 new Tooltip("Notifications")
         );
 
-
         profileAvatar = new StackPane();
 
         Circle avatarCircle =
@@ -238,7 +227,6 @@ public class DriverLayout {
                 "-fx-font-weight:bold;"
         );
 
-        /* Keep the complete signed-in driver name in the persistent header. */
         profileName.setMinWidth(
                 Region.USE_PREF_SIZE
         );
@@ -252,7 +240,6 @@ public class DriverLayout {
         profileName.setOnMouseClicked(
                 e -> DriverDashboard.openProfile()
         );
-
 
         HBox right = new HBox(
                 14,
@@ -270,7 +257,6 @@ public class DriverLayout {
                 Region.USE_PREF_SIZE
         );
 
-
         bar.getChildren().addAll(
                 brand,
                 left,
@@ -279,11 +265,6 @@ public class DriverLayout {
                 right
         );
 
-        /*
-         * My Bookings uses the same header as every driver page.  Remove
-         * lower-priority items as the window narrows so the bell and the full
-         * driver name never get squeezed out of view.
-         */
         bar.widthProperty().addListener(
                 (observable, oldWidth, newWidth) ->
                         updateTopBarVisibility(
@@ -297,7 +278,6 @@ public class DriverLayout {
 
         return bar;
     }
-
 
     private static void updateTopBarVisibility(
             double width,
@@ -331,7 +311,6 @@ public class DriverLayout {
         );
     }
 
-
     private static void setHeaderElementVisible(
             javafx.scene.Node element,
             boolean visible) {
@@ -344,7 +323,6 @@ public class DriverLayout {
                 visible
         );
     }
-
 
     public static void refreshProfile() {
 
@@ -373,7 +351,6 @@ public class DriverLayout {
             return;
         }
 
-
         String name = driver.getName();
 
         if (name != null
@@ -397,7 +374,6 @@ public class DriverLayout {
                     "D"
             );
         }
-
 
         String imageUrl =
                 driver.getProfileImageUrl();
@@ -446,7 +422,6 @@ public class DriverLayout {
         }
     }
 
-
     private static void showInitials() {
 
         if (profileAvatar == null) {
@@ -466,7 +441,6 @@ public class DriverLayout {
                 profileInitials
         );
     }
-
 
     private static String getInitials(
             String fullName) {
@@ -494,7 +468,6 @@ public class DriverLayout {
                         .substring(0, 1)
         ).toUpperCase();
     }
-
 
     public static Label label(
             String text,

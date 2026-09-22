@@ -15,11 +15,7 @@ import com.core2web.model.ChargingSession;
 
 public class ChargingSessionDao {
 
-    // Firestore collection IDs are case-sensitive and the real collection is
-    // "ChargingSession". The previous lowercase value queried a collection that does
-    // not exist, which returns an empty result rather than an error.
     private static final String COLLECTION = "ChargingSession";
-
 
     public ChargingSession getActiveSession(String uid, String idToken) {
         List<JSONObject> docs = FirestoreHelper.queryWithFilters(
@@ -38,7 +34,6 @@ public class ChargingSessionDao {
         return fromDocument(docs.get(0));
     }
 
-
     public List<ChargingSession> getSessionsThisMonth(String uid, String idToken) {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
         ZonedDateTime startOfMonth = now.withDayOfMonth(1)
@@ -48,9 +43,6 @@ public class ChargingSessionDao {
                                         .withNano(0);
         Instant startInstant = startOfMonth.toInstant();
 
-        // startedAt is an ISO-8601 string, so the date range cannot be a query filter
-        // (it would serialise to timestampValue and match nothing). Filter in memory,
-        // same as WalletDao does.
         List<JSONObject> docs = FirestoreHelper.queryWithFilters(
                 COLLECTION,
                 Arrays.asList(
@@ -62,17 +54,6 @@ public class ChargingSessionDao {
         return toDomainList(docs);
     }
 
-
-    /**
-     * Opens a session. Called when the driver verifies the customer's code, so this
-     * runs with the DRIVER's token — the security rules must permit that.
-     *
-     * <p>Only fields we actually know are populated: owner, booking, start time and
-     * the requested kWh. Telemetry (batteryPct/currentKwh/powerKw/runningCost) stays
-     * 0 because nothing measures it; see ChargingSession.hasLiveMeter().
-     *
-     * @return the new document id, or null on failure
-     */
     public String createSession(ChargingSession session, String idToken) {
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put("ownerId", session.getOwnerId());
@@ -89,8 +70,6 @@ public class ChargingSessionDao {
         return FirestoreHelper.createDocument(COLLECTION, fields, idToken);
     }
 
-
-    /** The open session for a booking, or null. Used to close it on completion. */
     public ChargingSession getSessionForBooking(String bookingId, String idToken) {
         if (bookingId == null || bookingId.isEmpty()) {
             return null;
@@ -106,15 +85,12 @@ public class ChargingSessionDao {
         return docs.isEmpty() ? null : fromDocument(docs.get(0));
     }
 
-
-    /** Closes a session: status completed, completedAt stamped. */
     public boolean completeSession(String sessionId, String idToken) {
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put("status", ChargingSession.STATUS_COMPLETED);
         fields.put("completedAt", Instant.now().toString());
         return FirestoreHelper.updateFields(COLLECTION, sessionId, fields, idToken);
     }
-
 
     private List<ChargingSession> toDomainList(List<JSONObject> docs) {
         List<ChargingSession> list = new ArrayList<>();

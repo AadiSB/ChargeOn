@@ -1,6 +1,3 @@
-
-
-
 .root {
     -fx-font-family: "Segoe UI", "System";
     -fx-base: #0f1720;
@@ -10,7 +7,6 @@
 .root-pane {
     -fx-background-color: #0f1720;
 }
-
 
 .title-bar {
     -fx-background-color: #0b1116;
@@ -25,7 +21,6 @@
     -fx-font-weight: bold;
 }
 
-
 .sidebar {
     -fx-background-color: #0b1116;
     -fx-border-color: transparent #1e293b transparent transparent;
@@ -37,7 +32,6 @@
     -fx-font-size: 20px;
     -fx-font-weight: bold;
 }
-
 
 .nav-item {
     -fx-background-color: transparent;
@@ -61,7 +55,6 @@
     -fx-text-fill: #94a3b8;
     -fx-font-size: 13px;
 }
-
 
 .shift-card {
     -fx-background-color: #111827;
@@ -110,7 +103,6 @@
     -fx-font-size: 10px;
 }
 
-
 .topbar {
     -fx-background-color: #0f1720;
     -fx-border-color: transparent transparent #1e293b transparent;
@@ -154,7 +146,6 @@
     -fx-background-color: rgba(16, 185, 129, 0.06);
 }
 
-
 .card {
     -fx-background-color: #111827;
     -fx-background-radius: 12;
@@ -181,7 +172,6 @@
     -fx-font-size: 12px;
 }
 
-
 .battery-bar {
     -fx-pref-height: 6;
     -fx-background-radius: 3;
@@ -197,7 +187,6 @@
     -fx-background-radius: 3;
     -fx-background-insets: 0;
 }
-
 
 .emergency-banner {
     -fx-background-color: rgba(239, 68, 68, 0.08);
@@ -217,7 +206,6 @@
     -fx-text-fill: #94a3b8;
     -fx-font-size: 12px;
 }
-
 
 .active-booking-card {
     -fx-background-color: #111827;
@@ -276,7 +264,6 @@
     -fx-font-size: 11px;
 }
 
-
 .primary-btn {
     -fx-background-color: #10b981;
     -fx-text-fill: white;
@@ -291,7 +278,6 @@
     -fx-background-color: #059669;
 }
 
-/* Pickup-code dialog ----------------------------------------------------- */
 .chargeon-dialog {
     -fx-background-color: #111827;
     -fx-border-color: #334155;
@@ -419,7 +405,6 @@
     -fx-background-color: #dc2626;
 }
 
-
 .section-title {
     -fx-text-fill: #f8fafc;
     -fx-font-size: 16px;
@@ -437,7 +422,6 @@
     -fx-background-color: #1e293b;
 }
 
-
 .quick-action-card {
     -fx-background-color: #111827;
     -fx-background-radius: 12;
@@ -452,7 +436,6 @@
     -fx-border-color: #334155;
 }
 
-
 .scroll-pane {
     -fx-background-color: transparent;
 }
@@ -460,7 +443,6 @@
 .scroll-pane .viewport {
     -fx-background-color: transparent;
 }
-
 
 .progress-bar .track {
     -fx-background-color: #1e293b;

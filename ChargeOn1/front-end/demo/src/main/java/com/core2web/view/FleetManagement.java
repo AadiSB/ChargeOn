@@ -31,14 +31,12 @@ public class FleetManagement {
     private static final RouteController routeController =
             new RouteController();
 
-
     public static void show(Stage stage) {
 
         AdminDashboard.goTo(
                 "Fleet Management"
         );
     }
-
 
     static ScrollPane buildMainContent() {
 
@@ -48,7 +46,6 @@ public class FleetManagement {
         content.setPadding(
                 new Insets(16)
         );
-
 
         List<Route> routes =
                 routeController.getAllRoutes();
@@ -66,7 +63,6 @@ public class FleetManagement {
                         routesHolder
                 );
 
-
         List<Bus> buses =
                 busController.getAllBuses();
 
@@ -83,12 +79,10 @@ public class FleetManagement {
                         inventoryHolder
                 );
 
-
         content.getChildren().addAll(
                 routesCard,
                 inventoryCard
         );
-
 
         ScrollPane sp =
                 new ScrollPane(
@@ -104,13 +98,11 @@ public class FleetManagement {
         return sp;
     }
 
-
     private static void populateRoutes(
             VBox routesHolder,
             List<Route> routes) {
 
         routesHolder.getChildren().clear();
-
 
         if (routes.isEmpty()) {
 
@@ -123,11 +115,9 @@ public class FleetManagement {
             return;
         }
 
-
         for (Route route : routes) {
 
             String busLabel;
-
 
             if (route.getAssignedBusId() == null ||
                     route.getAssignedBusId().isEmpty()) {
@@ -140,7 +130,6 @@ public class FleetManagement {
                 busLabel =
                         route.getAssignedBusId();
             }
-
 
             routesHolder.getChildren().add(
                     routeRow(
@@ -156,13 +145,11 @@ public class FleetManagement {
         }
     }
 
-
     private static void populateInventory(
             VBox inventoryHolder,
             List<Bus> buses) {
 
         inventoryHolder.getChildren().clear();
-
 
         if (buses.isEmpty()) {
 
@@ -183,13 +170,11 @@ public class FleetManagement {
             return;
         }
 
-
         GridPane grid =
                 new GridPane();
 
         grid.setHgap(12);
         grid.setVgap(12);
-
 
         ColumnConstraints col =
                 new ColumnConstraints();
@@ -201,10 +186,8 @@ public class FleetManagement {
                 col
         );
 
-
         int row = 0;
         int col2 = 0;
-
 
         for (Bus bus : buses) {
 
@@ -228,9 +211,7 @@ public class FleetManagement {
                     Double.MAX_VALUE
             );
 
-
             col2++;
-
 
             if (col2 > 1) {
 
@@ -239,12 +220,10 @@ public class FleetManagement {
             }
         }
 
-
         inventoryHolder.getChildren().add(
                 grid
         );
     }
-
 
     private static VBox buildRoutesCard(
             VBox routesHolder) {
@@ -260,14 +239,12 @@ public class FleetManagement {
                 new Insets(18)
         );
 
-
         HBox header =
                 new HBox(10);
 
         header.setAlignment(
                 Pos.CENTER_LEFT
         );
-
 
         Label title =
                 new Label(
@@ -278,7 +255,6 @@ public class FleetManagement {
                 "booking-stage"
         );
 
-
         Region sp =
                 new Region();
 
@@ -286,7 +262,6 @@ public class FleetManagement {
                 sp,
                 Priority.ALWAYS
         );
-
 
         Button addRoute =
                 new Button(
@@ -297,20 +272,17 @@ public class FleetManagement {
                 "primary-btn"
         );
 
-
         addRoute.setOnAction(e -> {
 
             AdminDashboard.openNewRoute();
 
         });
 
-
         header.getChildren().addAll(
                 title,
                 sp,
                 addRoute
         );
-
 
         HBox colHeaders =
                 new HBox();
@@ -323,7 +295,6 @@ public class FleetManagement {
                         12
                 )
         );
-
 
         colHeaders.getChildren().addAll(
 
@@ -358,17 +329,14 @@ public class FleetManagement {
                 )
         );
 
-
         card.getChildren().addAll(
                 header,
                 colHeaders,
                 routesHolder
         );
 
-
         return card;
     }
-
 
     private static HBox routeRow(
             Route route,
@@ -394,7 +362,6 @@ public class FleetManagement {
                 "booking-row"
         );
 
-
         Label codeLbl =
                 new Label(code);
 
@@ -406,7 +373,6 @@ public class FleetManagement {
 
         codeLbl.setPrefWidth(130);
         codeLbl.setMinWidth(130);
-
 
         Label stopsLbl =
                 new Label(stops);
@@ -421,7 +387,6 @@ public class FleetManagement {
         stopsLbl.setPrefWidth(160);
         stopsLbl.setMinWidth(160);
 
-
         Label schedLbl =
                 new Label(schedule);
 
@@ -435,7 +400,6 @@ public class FleetManagement {
         schedLbl.setPrefWidth(140);
         schedLbl.setMinWidth(140);
 
-
         Label busesLbl =
                 new Label(buses);
 
@@ -447,7 +411,6 @@ public class FleetManagement {
         busesLbl.setPrefWidth(130);
         busesLbl.setMinWidth(130);
 
-
         Region actionSpacer =
                 new Region();
 
@@ -455,7 +418,6 @@ public class FleetManagement {
                 actionSpacer,
                 Priority.ALWAYS
         );
-
 
         Button removeButton =
                 new Button("Remove");
@@ -469,14 +431,12 @@ public class FleetManagement {
                 "-fx-padding: 4 8 4 8;"
         );
 
-
         removeButton.setOnAction(e -> {
 
             boolean deleted =
                     routeController.deleteRoute(
                             route.getId()
                     );
-
 
             if (deleted) {
 
@@ -493,15 +453,6 @@ public class FleetManagement {
             }
         });
 
-
-        /*
-         * Do NOT assign statusBadge()
-         * to a Label.
-         *
-         * Your existing statusBadge()
-         * is added directly to the row,
-         * exactly like your original code.
-         */
         row.getChildren().addAll(
 
                 codeLbl,
@@ -523,10 +474,8 @@ public class FleetManagement {
                 removeButton
         );
 
-
         return row;
     }
-
 
     private static VBox buildInventoryCard(
             VBox inventoryHolder) {
@@ -542,23 +491,19 @@ public class FleetManagement {
                 new Insets(18)
         );
 
-
         Label title =
                 label(
                         "Battery inventory",
                         "section-title"
                 );
 
-
         card.getChildren().addAll(
                 title,
                 inventoryHolder
         );
 
-
         return card;
     }
-
 
     private static Label loadingLabel(
             String text) {
@@ -573,7 +518,6 @@ public class FleetManagement {
 
         return l;
     }
-
 
     private static VBox inventoryBusCard(
             Bus bus) {
@@ -593,7 +537,6 @@ public class FleetManagement {
                         + "% reserve · "
                         + bus.getDepot();
 
-
         VBox c =
                 new VBox(8);
 
@@ -608,14 +551,12 @@ public class FleetManagement {
         c.setPrefHeight(96);
         c.setMinHeight(96);
 
-
         HBox header =
                 new HBox();
 
         header.setAlignment(
                 Pos.CENTER_LEFT
         );
-
 
         Label id =
                 new Label(
@@ -628,7 +569,6 @@ public class FleetManagement {
                 "-fx-font-weight:bold;"
         );
 
-
         Region sp =
                 new Region();
 
@@ -636,7 +576,6 @@ public class FleetManagement {
                 sp,
                 Priority.ALWAYS
         );
-
 
         header.getChildren().addAll(
                 id,
@@ -647,7 +586,6 @@ public class FleetManagement {
                         100
                 )
         );
-
 
         Label battLbl =
                 new Label(
@@ -661,7 +599,6 @@ public class FleetManagement {
 
         battLbl.setWrapText(true);
 
-
         Region vsp =
                 new Region();
 
@@ -669,7 +606,6 @@ public class FleetManagement {
                 vsp,
                 Priority.ALWAYS
         );
-
 
         ProgressBar pb =
                 new ProgressBar(
@@ -685,14 +621,12 @@ public class FleetManagement {
                 Double.MAX_VALUE
         );
 
-
         c.getChildren().addAll(
                 header,
                 battLbl,
                 vsp,
                 pb
         );
-
 
         return c;
     }
