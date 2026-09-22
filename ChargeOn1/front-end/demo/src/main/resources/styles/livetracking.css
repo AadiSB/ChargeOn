@@ -1,0 +1,39 @@
+
+
+
+.page-live-tracking .map-surface { -fx-min-height: 430; -fx-pref-height: 430; }
+
+
+.page-live-tracking .route-line   { -fx-stroke: #10b981; -fx-stroke-width: 4; -fx-stroke-line-cap: round; -fx-fill: transparent; }
+.page-live-tracking .marker-bus   { -fx-fill: #F59E0B; }
+.page-live-tracking .marker-me    { -fx-fill: #3B82F6; }
+.page-live-tracking .marker-halo  { -fx-fill: #3B82F633; }
+
+
+.page-live-tracking .eta-card {
+    -fx-background-color: #1e293bE6;
+    -fx-background-radius: 8;
+    -fx-border-color: #1e293b; -fx-border-radius: 8; -fx-border-width: 1;
+    -fx-padding: 14 16 14 16;
+    -fx-max-width: 230;
+}
+.page-live-tracking .eta-value { -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #10b981; }
+.page-live-tracking .eta-card .ghost-button { -fx-min-height: 38; -fx-pref-height: 38; -fx-font-size: 13px; }
+
+
+.page-live-tracking .live-dot { -fx-background-color: #10b981; -fx-background-radius: 4; -fx-min-width: 7; -fx-min-height: 7; }
+
+
+.page-live-tracking .step-dot        { -fx-min-width: 20; -fx-min-height: 20; -fx-background-radius: 10; -fx-border-radius: 10; -fx-border-width: 2; }
+.page-live-tracking .step-done       { -fx-border-color: #10b981; -fx-background-color: #10b981; }
+.page-live-tracking .step-current    { -fx-border-color: #10b981; -fx-background-color: #111827; }
+.page-live-tracking .step-pending    { -fx-border-color: #334155; -fx-background-color: #111827; }
+.page-live-tracking .step-line-done    { -fx-background-color: #10b981; -fx-pref-height: 2; }
+.page-live-tracking .step-line-pending { -fx-background-color: #334155; -fx-pref-height: 2; }
+.page-live-tracking .step-label         { -fx-font-size: 11px; -fx-text-fill: #64748b; }
+.page-live-tracking .step-label-active  { -fx-text-fill: #F8FAFC; }
+
+
+.page-live-tracking .detail-row { -fx-font-size: 13px; }
+.page-live-tracking .detail-total { -fx-text-fill: #10b981; -fx-font-weight: bold; }
+.page-live-tracking .timeline-dot { -fx-background-radius: 4; -fx-min-width: 8; -fx-min-height: 8; }

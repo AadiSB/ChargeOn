@@ -1,0 +1,57 @@
+
+.nav-list {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-fixed-cell-size: 42;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.nav-list .viewport,
+.nav-list .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.nav-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-padding: 0 12 0 12;
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.nav-list .list-cell:empty {
+    -fx-cursor: default;
+}
+
+.nav-list .list-cell:filled:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-list .list-cell:filled:selected {
+    -fx-background-color: rgba(16, 185, 129, 0.10);
+    -fx-background-radius: 8;
+    -fx-text-fill: #f8fafc;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent transparent transparent #10b981;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-radius: 0 8 8 0;
+}
+
+.nav-list .scroll-bar:vertical,
+.nav-list .scroll-bar:horizontal {
+    -fx-opacity: 0;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+}
+
+.topbar-brand {
+    -fx-min-width: 150;
+}
+
+.topbar-brand .portal-tag {
+    -fx-padding: 0 0 0 2;
+}

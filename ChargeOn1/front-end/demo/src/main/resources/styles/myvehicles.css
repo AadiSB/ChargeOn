@@ -1,0 +1,45 @@
+
+
+
+.page-my-vehicles .page-header .title { -fx-font-size: 18px; }
+
+
+.page-my-vehicles .vehicle-card { -fx-min-height: 330; }
+.page-my-vehicles .vehicle-card:hover { -fx-border-color: #334155; }
+.page-my-vehicles .vehicle-card-primary { -fx-border-color: #10b98166; }
+
+
+.page-my-vehicles .vehicle-art {
+    -fx-min-height: 110; -fx-pref-height: 110;
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 8;
+    -fx-border-color: #1e293b; -fx-border-radius: 8; -fx-border-width: 1;
+    -fx-alignment: center;
+    -fx-font-size: 34px;
+}
+
+.page-my-vehicles .vehicle-name { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #F8FAFC; }
+.page-my-vehicles .vehicle-spec { -fx-font-size: 13px; -fx-text-fill: #64748b; }
+.page-my-vehicles .vehicle-soc  { -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #10b981; }
+.page-my-vehicles .vehicle-soc-low { -fx-text-fill: #F59E0B; }
+.page-my-vehicles .vehicle-range { -fx-font-size: 13px; -fx-text-fill: #64748b; }
+
+
+.page-my-vehicles .vehicle-card .ghost-button,
+.page-my-vehicles .vehicle-card .secondary-button { -fx-min-height: 38; -fx-pref-height: 38; -fx-font-size: 13px; }
+
+
+.page-my-vehicles .add-vehicle-tile {
+    -fx-background-color: transparent;
+    -fx-background-radius: 14;
+    -fx-border-color: #334155; -fx-border-radius: 14; -fx-border-width: 1;
+    -fx-border-style: segments(6, 6) line-cap round;
+    -fx-min-height: 330;
+    -fx-alignment: center;
+    -fx-padding: 20;
+    -fx-cursor: hand;
+}
+.page-my-vehicles .add-vehicle-tile:hover { -fx-border-color: #10b981; }
+.page-my-vehicles .add-vehicle-tile .label-text { -fx-text-fill: #64748b; }
+.page-my-vehicles .add-vehicle-tile:hover .label-text { -fx-text-fill: #10b981; }
+.page-my-vehicles .add-vehicle-glyph { -fx-font-size: 28px; -fx-text-fill: #64748b; }
