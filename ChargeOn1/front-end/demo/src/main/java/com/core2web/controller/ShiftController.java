@@ -43,7 +43,6 @@ public class ShiftController {
             return false;
         }
 
-        // Canonical bus document ID, not the raw assignedBusId field.
         Bus bus = busDao.resolveBusForDriver(
                 session.getUid(), driver.getAssignedBusId(), session.getIdToken());
 

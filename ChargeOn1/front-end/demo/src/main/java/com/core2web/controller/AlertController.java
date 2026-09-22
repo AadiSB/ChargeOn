@@ -33,7 +33,6 @@ public class AlertController {
         );
     }
 
-
     public String submitAlert(
             String issueType,
             String severity,
@@ -47,8 +46,6 @@ public class AlertController {
 
         Driver driver = driverDao.getCurrentDriver();
 
-        // Store the canonical bus document ID, not the raw assignedBusId field -
-        // that may hold a busCode or a stale id. Report the human-readable busCode.
         Bus bus = driver == null
                 ? null
                 : busDao.resolveBusForDriver(
@@ -100,7 +97,6 @@ public class AlertController {
 
         return newId;
     }
-
 
     public boolean cancelAlert(String alertId) {
 

@@ -10,7 +10,6 @@ import com.core2web.dao.DriverEarningDao;
 import com.core2web.model.AuthSession;
 import com.core2web.model.DriverEarning;
 
-/** Read access to the signed-in driver's payout ledger. */
 public class DriverEarningController {
 
     private final DriverEarningDao earningDao = new DriverEarningDao();
@@ -42,7 +41,6 @@ public class DriverEarningController {
         return total;
     }
 
-    /** Sum of payouts since {@code since}. */
     public double getMyEarnedSince(Instant since) {
         AuthSession session = AuthSession.getCurrent();
         if (session == null) {

@@ -20,9 +20,6 @@ import com.core2web.controller.BusController;
 
 public class DriverDashboard {
 
-    // No `homestage` field here on purpose: it was declared, never assigned and
-    // never read — the same landmine that made OwnerDashboard.homestage NPE.
-    // `window` is the stage; use that.
     static Stage window;
     static Scene scene;
     static ListView<String> sidebar;
@@ -125,9 +122,6 @@ public class DriverDashboard {
             return;
         }
 
-        // Live Navigation runs a position poller and possibly demo playback. Stop
-        // them whenever we leave (or rebuild) that screen, so timers don't
-        // accumulate and keep calling Firestore in the background.
         LiveNavigation.disposeCurrent();
 
         switch (page) {
@@ -193,8 +187,6 @@ public class DriverDashboard {
         scene.getStylesheets().add(DriverDashboard.class.getResource("/styles/sidebar.css").toExternalForm());
     }
 
-
-
     static HBox buildMainContent() {
         return new DriverDashboard().buildContent();
     }
@@ -234,7 +226,6 @@ public class DriverDashboard {
         VBox center = new VBox(14);
         HBox.setHgrow(center, Priority.ALWAYS);
 
-        // Only added when a real pending emergency exists — no placeholder banner.
         HBox emergencyBanner = buildEmergencyBanner();
         if (emergencyBanner != null) {
             center.getChildren().add(emergencyBanner);
@@ -279,10 +270,6 @@ public class DriverDashboard {
         batteryCard.getChildren().addAll(battRow, pb, gap(8));
     }
 
-    /**
-     * The emergency diversion banner, or null when this driver has no pending
-     * emergency — callers must skip adding it entirely in that case.
-     */
     private HBox buildEmergencyBanner() {
         com.core2web.model.Booking pending =
                 bookingController.getPendingEmergencyBookingForCurrentDriver();
@@ -407,7 +394,6 @@ public class DriverDashboard {
         HBox btns = new HBox(12);
 
         if (com.core2web.model.Booking.STATUS_CHARGING.equals(b.getStatus())) {
-            // Charging is under way: the only remaining driver action is to close it.
             btns.getChildren().add(buildCompleteSessionControls(b, feedback));
             show(feedback, "✓  Verified at pickup. Complete the session when charging finishes.",
                     "#10b981");
@@ -418,7 +404,6 @@ public class DriverDashboard {
             show(feedback, "✓  Pickup verified with the customer's code.", "#10b981");
             btns.getChildren().add(startBtn);
         } else if (!b.canVerifyOtp()) {
-            // Nothing to verify until the trip is under way.
             Button startBtn = new Button("Verify code & start charging");
             startBtn.getStyleClass().add("primary-btn");
             startBtn.setDisable(true);
@@ -433,14 +418,6 @@ public class DriverDashboard {
         return section;
     }
 
-    /**
-     * Terminal action, so it's a two-step confirm inline in the card rather than a
-     * popup: "Complete session" reveals a "Confirm completion"/"Cancel" pair with the
-     * same warning copy the old dialog showed.
-     *
-     * <p>{@code completeBooking} also marks the ChargingSession completed, which is
-     * what clears the owner's "Active session" card.
-     */
     private VBox buildCompleteSessionControls(com.core2web.model.Booking b, Label feedback) {
 
         Button completeBtn = new Button("Complete session");
@@ -504,14 +481,6 @@ public class DriverDashboard {
         return new VBox(10, completeBtn, confirmBlock);
     }
 
-    /**
-     * Inline pickup-code entry shown beneath "Verify code & start charging" instead
-     * of a popup dialog, mirroring {@link #buildCompleteSessionControls}.
-     *
-     * <p>The driver never sees the correct value: the match is enforced by the
-     * Firestore rule on the CHARGING transition, so a rejected write is exactly a
-     * wrong code.
-     */
     private VBox buildOtpVerificationControls(com.core2web.model.Booking b, Label feedback) {
 
         Button startBtn = new Button("Verify code & start charging");
@@ -700,7 +669,6 @@ public class DriverDashboard {
         item.getChildren().addAll(new Circle(6, Color.web(b.statusColor())), nameBox, timeBox);
         return item;
     }
-
 
     private Label label(String text, String styleClass) {
         Label l = new Label(text);

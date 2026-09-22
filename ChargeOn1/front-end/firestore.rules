@@ -1,25 +1,7 @@
 rules_version = '2';
 
-// ChargeOn Firestore security rules.
-//
-// Publishing REPLACES the entire ruleset — this file must therefore cover every
-// collection the app touches, not just the one you are changing. Anything not
-// matched below is denied by default.
-//
-// Role model: a user's role IS the existence of a document keyed by their uid in
-// Admin / Driver / Owner (see AuthController.signIn, which gates login on
-// documentExists(capitalize(role), uid)). So every user must be able to read their
-// OWN document in their role collection, or login fails.
-//
-// IMPORTANT when testing: FirestoreHelper swallows HTTP failures and returns empty
-// lists / false. A rule that is too strict therefore shows up as a BLANK SCREEN,
-// not an error. After publishing, log in as each role and check the screens listed
-// at the bottom of this file.
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ---------------------------------------------------------------- helpers
 
     function signedIn() {
       return request.auth != null;
@@ -44,9 +26,6 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    // ------------------------------------------------------- identity / roles
-
-    // Reading your OWN doc must stay allowed: that read is the login role check.
     match /Admin/{uid} {
       allow get: if isSelf(uid) || isAdmin();
       allow list: if isAdmin();
@@ -56,23 +35,14 @@ service cloud.firestore {
     }
 
     match /Driver/{uid} {
-      // An owner's booking flow resolves the assigned driver's name for the admin
-      // notification, so it needs a single-document read of that driver — but not
-      // the whole roster.
       allow get: if signedIn();
       allow list: if isAdmin();
-      // The driver's own document is created with THEIR token during signUp
-      // (DriverDao.createDriverAccount), so create must be self.
       allow create: if isSelf(uid);
-      // Admin writes assignedBusId via linkDriverAndBus / repairBusLinks.
       allow update: if isSelf(uid) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /Owner/{uid} {
-      // Drivers read the requester's name/phone for the emergency banner
-      // (EmergencyBanner.subtitle -> OwnerController.getOwner), which is now a
-      // single-document read — so drivers never need to enumerate customers.
       allow get: if isSelf(uid) || isAdmin() || isDriver();
       allow list: if isAdmin();
       allow create: if isSelf(uid);
@@ -80,34 +50,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ------------------------------------------------------------------ fleet
-
     match /buses/{busId} {
-      // Everyone signed in needs to see the fleet: owners pick a bus when booking,
-      // drivers resolve their own bus, admins monitor.
       allow get, list: if signedIn();
-      // assignedDriverId is the source of truth for the bus->driver link and is
-      // only ever written by an admin (AddUserAccount / linkDriverAndBus).
       allow create, update: if isAdmin();
       allow delete: if isAdmin();
     }
 
-    // Current bus positions. Document ID IS the busId, one doc per bus.
     match /BusLocation/{busId} {
 
-      // Admins monitor the fleet; owners track the bus on their booking.
       allow get, list: if signedIn();
 
-      // Only the driver currently assigned to this bus may write its position.
       allow create, update: if signedIn()
         && get(/databases/$(database)/documents/buses/$(busId)).data.assignedDriverId == request.auth.uid
-        // The document must describe the bus it is keyed by.
         && request.resource.data.busId == busId
-        // A writer cannot attribute the update to somebody else.
         && request.resource.data.updatedById == request.auth.uid
-        // Coordinates must be real numbers in range. This also rejects a
-        // stringified GeoPoint, which FirestoreHelper.toFirestoreValue would
-        // otherwise produce silently.
         && request.resource.data.latitude is number
         && request.resource.data.longitude is number
         && request.resource.data.latitude >= -90
@@ -116,7 +72,6 @@ service cloud.firestore {
         && request.resource.data.longitude <= 180
         && request.resource.data.source in ['MANUAL', 'SIMULATED', 'DEVICE'];
 
-      // No position history is kept, so a client delete is never legitimate.
       allow delete: if false;
     }
 
@@ -125,30 +80,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------------------- bookings
-
     match /bookings/{bookingId} {
-      // Drivers are allowed to read all bookings rather than only their own.
-      // getBookingsForCurrentDriver() also queries by busId to pick up legacy
-      // bookings with no driverId, and a list query fails outright if ANY
-      // returned document fails the rule — so a per-document driverId check
-      // would break that query. Acceptable for an internal fleet tool.
       allow get, list: if isAdmin() || isDriver()
         || (isOwner() && resource.data.ownerId == request.auth.uid);
 
-      // An owner may only create bookings in their own name.
       allow create: if isOwner()
         && request.resource.data.ownerId == request.auth.uid;
 
-      // Drivers advance status; admins dispatch; owners cancel their own.
-      //
-      // The CHARGING transition is the pickup-verification gate: a driver may only
-      // reach it by submitting otpAttempt matching the code in bookingOtp, which
-      // they cannot read. This get() runs server-side, so the secret never leaves
-      // the rule. Admins can override (ops fallback if a customer loses the code).
-      //
-      // COMPLETED is gated on otpVerifiedAt so a driver cannot skip past CHARGING
-      // to close out an unverified session.
       allow update: if isAdmin()
         || (isDriver() && driverStatusChangeAllowed(bookingId))
         || (isOwner() && resource.data.ownerId == request.auth.uid);
@@ -156,10 +94,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // .get(field, default) rather than dotted access: FirestoreHelper sends partial
-    // updates, and on a booking predating these fields a dotted read of a missing
-    // key raises an error. That happens to fail closed, but relying on an error to
-    // mean "deny" is fragile — an explicit default is predictable.
     function otpMatches(bookingId) {
       return request.resource.data.get('otpAttempt', '') != ''
         && request.resource.data.get('otpAttempt', '') ==
@@ -172,37 +106,26 @@ service cloud.firestore {
             || request.resource.data.get('otpVerifiedAt', '') != '');
     }
 
-    // Pickup verification codes. Document ID is the bookingId.
-    //
-    // Drivers are deliberately denied read here — that is the entire security
-    // property. They prove they met the customer by submitting the code as
-    // otpAttempt on the booking, which the rule above checks server-side.
     match /bookingOtp/{bookingId} {
       allow get: if isAdmin()
         || (isOwner() && resource.data.ownerId == request.auth.uid);
       allow list: if isAdmin();
-      // Written by the owner as they create the booking.
       allow create: if isOwner()
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.bookingId == bookingId
         && request.resource.data.otp is string
         && request.resource.data.otp.size() == 6;
-      // A code is single-use and must not be rewritten or removed by a client.
       allow update, delete: if false;
     }
 
     match /ChargingSession/{sessionId} {
       allow get, list: if isAdmin() || isDriver()
         || (isOwner() && resource.data.ownerId == request.auth.uid);
-      // Opened by the DRIVER when they verify the customer's code, and closed by
-      // them on completion — so drivers need create/update here, not just admins.
       allow create: if isAdmin()
         || (isDriver() && request.resource.data.status == 'active');
       allow update: if isAdmin() || isDriver();
       allow delete: if false;
     }
-
-    // ---------------------------------------------------------------- vehicles
 
     match /vehicles/{vehicleId} {
       allow get, list: if isAdmin() || isDriver()
@@ -213,11 +136,8 @@ service cloud.firestore {
         || (isOwner() && resource.data.ownerId == request.auth.uid);
     }
 
-    // -------------------------------------------------------- alerts / tickets
-
     match /alerts/{alertId} {
       allow get, list: if isAdmin() || isDriver();
-      // Drivers report faults on their own bus, in their own name.
       allow create: if isDriver()
         && request.resource.data.driverId == request.auth.uid;
       allow update: if isAdmin();
@@ -231,23 +151,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ----------------------------------------------------------- notifications
-
     match /notifications/{notificationId} {
-      // A user reads only their own (getMyNotifications filters userId == uid, so
-      // every document a driver/owner receives satisfies this). Admins read the
-      // admin_broadcast feed, whose documents carry an empty userId.
       allow get, list: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid);
-      // notifyAdmins() is called from driver sessions (AlertController) and owner
-      // sessions (BookingController), so any signed-in user may create one.
       allow create: if signedIn();
       allow update, delete: if isAdmin();
     }
 
-    // Owner notifications generated only when a driver updates that owner's
-    // booking status. The client filters by userId, so each owner can read only
-    // their own feed from the dedicated `ad notifications` collection.
     match /ad notifications/{notificationId} {
       allow get, list: if isAdmin()
         || (isOwner() && resource.data.userId == request.auth.uid);
@@ -256,23 +166,14 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // ----------------------------------------------------------------- money
-
     match /Wallet/{txnId} {
-      // Admin revenue totals scan the whole collection. Drivers are NOT granted
-      // read here: that would expose every customer's payment history.
       allow get, list: if isAdmin()
         || (isOwner() && resource.data.ownerId == request.auth.uid);
 
-      // Owners top up their own wallet. Drivers may write exactly one kind of row —
-      // a charge_payment against a booking THEY are assigned to, for that booking's
-      // own owner and its recorded fare. The get() is server-side, so a driver
-      // cannot invent an amount or bill an unrelated customer.
       allow create: if isAdmin()
         || (isOwner() && request.resource.data.ownerId == request.auth.uid)
         || (isDriver() && isSettlementFor(request.resource.data.bookingId));
 
-      // A ledger is append-only.
       allow update, delete: if false;
     }
 
@@ -288,14 +189,10 @@ service cloud.firestore {
         && request.resource.data.amount == bookingFor(bookingId).amount;
     }
 
-    // Driver payout ledger — separate from Wallet, which is the customer's account.
     match /DriverEarning/{earningId} {
-      // A driver sees only their own; admins see all for payroll.
       allow get, list: if isAdmin()
         || (isDriver() && resource.data.driverId == request.auth.uid);
 
-      // Written by the driver on completion, and only for a booking assigned to
-      // them, at the payout that booking recorded — so the share cannot be inflated.
       allow create: if isAdmin()
         || (isDriver()
             && request.resource.data.driverId == request.auth.uid
@@ -312,8 +209,6 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // ----------------------------------------------------------------- shifts
-
     match /shifts/{shiftId} {
       allow get, list: if isAdmin() || isDriver();
       allow create: if isDriver()
@@ -323,23 +218,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Everything else falls through to deny. In particular the dead collections
-    // Shifts (capital S), Stats and Transaction are intentionally not matched.
   }
 }
 
-// ---------------------------------------------------------------------------
-// POST-PUBLISH SMOKE TEST — a too-strict rule appears as an empty screen, not an
-// error, because FirestoreHelper swallows HTTP failures. Check each of these:
-//
-//   admin  : log in; Dashboard KPIs; Users & Drivers (roster + link integrity);
-//            Live Monitoring (fleet list + dispatched bookings); Notifications
-//   driver : log in; Dashboard (assigned bus + battery); My Bookings;
-//            Live Navigation -> "Set position" then click the map; Alerts & Issues
-//            (submit one); Shift & Earnings (clock in)
-//   owner  : register a new account; add a vehicle; Book Charging (bus dropdown
-//            must be populated); Live Tracking; Wallet; Subscription plans
-//
-// If a screen is blank, check the app's stdout — FirestoreHelper prints the
-// Firestore error body ("Query failed: ...", "Failed to update ...").
-// ---------------------------------------------------------------------------

@@ -54,14 +54,6 @@ public class BusController {
         return busDao.getBus(busId, session.getIdToken());
     }
 
-    /**
-     * The bus the signed-in driver actually drives, or null if they have none.
-     *
-     * <p>Resolved via {@link BusDao#resolveBusForDriver} so a stale, blank or
-     * busCode-shaped {@code Driver.assignedBusId} still finds the right bus.
-     * Use {@link #getBusIdForCurrentDriver()} when you need the canonical
-     * document ID to key other collections by.
-     */
     public Bus getBusForCurrentDriver() {
         AuthSession session = AuthSession.getCurrent();
         if (session == null) {
@@ -75,11 +67,6 @@ public class BusController {
                 session.getUid(), driver.getAssignedBusId(), session.getIdToken());
     }
 
-    /**
-     * Canonical bus document ID for the signed-in driver, or null. Always use this
-     * rather than {@code Driver.assignedBusId} when querying bookings or keying a
-     * BusLocation doc — the raw field may hold a busCode or a stale id.
-     */
     public String getBusIdForCurrentDriver() {
         Bus bus = getBusForCurrentDriver();
         return bus == null ? null : bus.getId();
@@ -121,11 +108,6 @@ public class BusController {
         return available;
     }
 
-    /**
-     * Buses with no driver on them yet — the only buses an admin may hand to a new
-     * driver. Distinct from {@link #getAvailableBuses()}, which is the dispatch pool
-     * and deliberately includes buses that already have a driver.
-     */
     public List<Bus> getUnassignedBuses() {
         List<Bus> unassigned = new ArrayList<>();
         for (Bus bus : getAllBuses()) {
@@ -136,18 +118,6 @@ public class BusController {
         return unassigned;
     }
 
-    /**
-     * Nearest available bus to a pickup point, by great-circle distance.
-     *
-     * <p>Positions come from the BusLocation collection, fetched in one round-trip
-     * and joined in memory. A bus with no BusLocation document has an unknown
-     * position and is skipped rather than being treated as 0,0. Stale positions are
-     * still used — an hour-old fix is a far better estimate than none — but a bus
-     * with no fix at all is never guessed at.
-     *
-     * <p>Returns null when no available bus has a known position; the caller then
-     * keeps the manual dropdown selection.
-     */
     public Bus getNearestAvailableBus(double lat, double lng) {
         Map<String, BusLocation> positions = busLocationController.getAllBusLocations();
 
@@ -169,7 +139,6 @@ public class BusController {
         return nearest;
     }
 
-    /** Haversine distance in kilometres. */
     public static double distanceKm(double lat1, double lng1, double lat2, double lng2) {
         final double earthRadiusKm = 6371.0;
 
@@ -183,13 +152,6 @@ public class BusController {
         return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    /**
-     * One fleet read producing a busId -> busCode lookup for rendering lists.
-     *
-     * <p>Bus document IDs are opaque Firestore auto-IDs, so no user-facing string
-     * should ever contain one. Keyed by document ID <em>and</em> by busCode, so a
-     * legacy field holding a code instead of an ID still resolves.
-     */
     public Map<String, String> getBusCodeLookup() {
         Map<String, String> lookup = new HashMap<>();
         for (Bus bus : getAllBuses()) {
@@ -203,12 +165,6 @@ public class BusController {
         return lookup;
     }
 
-    /**
-     * Human-readable label for a stored bus reference.
-     *
-     * @return the busCode, or {@code unknownLabel} when the reference is blank or
-     *         names a bus that no longer exists — never a raw document ID
-     */
     public static String busCodeLabel(String busIdOrCode, Map<String, String> lookup,
                                       String unknownLabel) {
         if (busIdOrCode == null || busIdOrCode.isEmpty() || "null".equals(busIdOrCode)) {
@@ -218,7 +174,6 @@ public class BusController {
         return code == null || code.isEmpty() ? unknownLabel : code;
     }
 
-    /** Single-reference variant for detail screens. One read; prefer the map for lists. */
     public String busCodeFor(String busIdOrCode, String unknownLabel) {
         if (busIdOrCode == null || busIdOrCode.isEmpty() || "null".equals(busIdOrCode)) {
             return unknownLabel;

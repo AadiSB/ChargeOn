@@ -1,24 +1,12 @@
 package com.core2web.model;
 
-/**
- * One driver's payout for one completed booking.
- *
- * <p>A separate ledger from {@code Wallet}, which is the customer's account
- * (top-ups minus payments). Mixing driver credits into it would corrupt both the
- * owner balance and the admin revenue totals, which sum that collection.
- *
- * <p>{@code fare} is recorded alongside {@code amount} so a payout stays auditable
- * even after {@link Pricing#DRIVER_SHARE} changes.
- */
 public class DriverEarning {
 
     private String id;
     private String driverId;
     private String bookingId;
     private String ownerId;
-    /** The driver's share, in rupees. */
     private double amount;
-    /** The full fare the customer paid, for audit. */
     private double fare;
     private String createdAt;
 

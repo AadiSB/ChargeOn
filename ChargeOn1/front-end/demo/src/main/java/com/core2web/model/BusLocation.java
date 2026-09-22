@@ -1,27 +1,11 @@
 package com.core2web.model;
 
-/**
- * A bus's CURRENT position — one document per bus, keyed by busId.
- *
- * <p>There is deliberately no position history: the app has no GPS and
- * FirestoreHelper has no orderBy/limit, so "most recent N" is not expressible as a
- * query. Keeping exactly one doc per bus makes every read an O(1)
- * {@code getDocument} instead.
- *
- * <p>Coordinates are two separate doubles, never a GeoPoint —
- * {@code FirestoreHelper.toFirestoreValue()} has no geoPointValue branch and would
- * silently stringify one.
- *
- * <p>"No BusLocation document" means <em>position unknown</em>, which is a
- * first-class state. It is never represented as 0,0.
- */
 public class BusLocation {
 
     public static final String SOURCE_MANUAL    = "MANUAL";
     public static final String SOURCE_SIMULATED = "SIMULATED";
     public static final String SOURCE_DEVICE    = "DEVICE";
 
-    /** A position older than this is shown as stale rather than live. */
     private static final long STALE_AFTER_MINUTES = 5;
 
     private String busId;
@@ -47,7 +31,6 @@ public class BusLocation {
         this.updatedById = updatedById;
     }
 
-
     public String getBusId()        { return busId; }
     public double getLatitude()     { return latitude; }
     public double getLongitude()    { return longitude; }
@@ -56,7 +39,6 @@ public class BusLocation {
     public String getSource()       { return source; }
     public String getUpdatedAt()    { return updatedAt; }
     public String getUpdatedById() { return updatedById; }
-
 
     public void setBusId(String busId)               { this.busId = busId; }
     public void setLatitude(double latitude)         { this.latitude = latitude; }
@@ -67,15 +49,10 @@ public class BusLocation {
     public void setUpdatedAt(String updatedAt)       { this.updatedAt = updatedAt; }
     public void setUpdatedById(String updatedById) { this.updatedById = updatedById; }
 
-    /**
-     * Guards against a document that exists but carries no usable fix. A real
-     * position is never exactly 0,0 for this fleet.
-     */
     public boolean hasCoordinates() {
         return latitude != 0 || longitude != 0;
     }
 
-    /** Minutes since this position was pushed, or -1 if updatedAt is missing/unparseable. */
     public long minutesSinceUpdate() {
         if (updatedAt == null || updatedAt.isEmpty()) {
             return -1;
@@ -89,13 +66,11 @@ public class BusLocation {
         }
     }
 
-    /** Stale when older than 5 minutes, or when the age can't be determined at all. */
     public boolean isStale() {
         long minutes = minutesSinceUpdate();
         return minutes < 0 || minutes > STALE_AFTER_MINUTES;
     }
 
-    /** "position just now" / "position 3 min ago" / "position age unknown". */
     public String freshnessLabel() {
         long minutes = minutesSinceUpdate();
         if (minutes < 0)  return "position age unknown";

@@ -57,7 +57,6 @@ public class BookingController {
     private final DriverController driverController =
             new DriverController();
 
-
     public String createBooking(
             String vehicleId,
             String scheduledTime,
@@ -75,15 +74,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Creates a booking.
-     *
-     * Existing callers continue to work.
-     *
-     * Non-emergency bookings created through this old method
-     * are treated as INSTANT bookings.
-     */
     public String createBooking(
             String vehicleId,
             String scheduledTime,
@@ -104,17 +94,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Creates a booking without automatically assigning a driver.
-     *
-     * This existing method is preserved so that old callers do not break.
-     *
-     * By default:
-     *
-     * emergency -> emergency
-     * normal    -> instant
-     */
     public String createBooking(
             String vehicleId,
             String scheduledTime,
@@ -140,19 +119,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * NEW booking creation method.
-     *
-     * This is the method used by BookCharging when it knows
-     * whether the owner selected:
-     *
-     * instant
-     * reserve
-     * emergency
-     *
-     * The existing booking creation flow is otherwise unchanged.
-     */
     public String createBooking(
             String vehicleId,
             String scheduledTime,
@@ -171,22 +137,12 @@ public class BookingController {
             return null;
         }
 
-
-        /*
-         * Freeze the fare at booking creation time.
-         */
         double fare =
                 Pricing.fare(
                         kwh,
                         isEmergency
                 );
 
-
-        /*
-         * Keep the bus selected by the OWNER.
-         *
-         * The driver is NOT automatically assigned here.
-         */
         boolean hasBus =
                 busId != null
                         && !busId.isEmpty();
@@ -196,21 +152,10 @@ public class BookingController {
                         ? busId
                         : "";
 
-
-        /*
-         * Driver is intentionally empty.
-         *
-         * ADMIN assigns the driver later.
-         */
         String driverId = "";
 
-
-        /*
-         * Every new booking waits for ADMIN dispatch.
-         */
         String status =
                 Booking.STATUS_QUEUED;
-
 
         Booking booking =
                 new Booking(
@@ -227,13 +172,6 @@ public class BookingController {
                         isEmergency
                 );
 
-
-        /*
-         * Store the actual booking type.
-         *
-         * If a caller sends an empty value, preserve safe
-         * backward-compatible behavior.
-         */
         if (bookingType == null
                 || bookingType.isEmpty()) {
 
@@ -247,7 +185,6 @@ public class BookingController {
                 bookingType
         );
 
-
         booking.setPickupLatitude(
                 pickupLatitude
         );
@@ -255,7 +192,6 @@ public class BookingController {
         booking.setPickupLongitude(
                 pickupLongitude
         );
-
 
         booking.setAmount(
                 fare
@@ -273,20 +209,12 @@ public class BookingController {
                 )
         );
 
-
-        /*
-         * Create the booking in Firestore.
-         */
         String bookingId =
                 bookingDao.createBooking(
                         booking,
                         session.getIdToken()
                 );
 
-
-        /*
-         * Create OTP exactly as before.
-         */
         if (bookingId != null) {
 
             String otp =
@@ -306,10 +234,6 @@ public class BookingController {
             }
         }
 
-
-        /*
-         * Notify admins that a booking is waiting for dispatch.
-         */
         if (bookingId != null) {
 
             String typeLabel;
@@ -329,7 +253,6 @@ public class BookingController {
                 typeLabel = " · INSTANT";
             }
 
-
             notificationController.notifyAdmins(
                     "booking_pending_dispatch",
                     "New booking "
@@ -340,14 +263,9 @@ public class BookingController {
             );
         }
 
-
         return bookingId;
     }
 
-
-    /**
-     * Gets the driver permanently assigned to a bus.
-     */
     private String resolveDriverId(
             Bus bus) {
 
@@ -368,11 +286,6 @@ public class BookingController {
         return driverId;
     }
 
-
-    /**
-     * Notifies the driver after the ADMIN has actually assigned
-     * a bus to the booking.
-     */
     private void notifyAssignedDriver(
             Bus bus,
             String driverId,
@@ -398,10 +311,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Notifies admins after a driver has actually been assigned.
-     */
     private void notifyAdminsOfDriverLink(
             String bookingId,
             String driverId,
@@ -428,7 +337,6 @@ public class BookingController {
                         ? "unknown bus"
                         : bus.getBusCode();
 
-
         notificationController.notifyAdmins(
                 isEmergency
                         ? "emergency_dispatch"
@@ -446,13 +354,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Existing method preserved.
-     *
-     * This deliberately remains unsorted because other screens
-     * may depend on the existing general booking list.
-     */
     public List<Booking> getAllBookings() {
 
         AuthSession session =
@@ -467,30 +368,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * NEW:
-     *
-     * Returns bookings in ADMIN DISPATCH priority order.
-     *
-     * Priority:
-     *
-     * 1. EMERGENCY
-     * 2. INSTANT
-     * 3. RESERVE
-     *
-     * Within EMERGENCY:
-     * oldest createdAt first
-     *
-     * Within INSTANT:
-     * oldest createdAt first
-     *
-     * Within RESERVE:
-     * earliest scheduled time first
-     *
-     * Only QUEUED bookings are returned because these are the
-     * bookings waiting for ADMIN dispatch.
-     */
     public List<Booking> getDispatchQueueBookings() {
 
         AuthSession session =
@@ -500,16 +377,11 @@ public class BookingController {
             return new ArrayList<>();
         }
 
-
         List<Booking> bookings =
                 bookingDao.getAllBookings(
                         session.getIdToken()
                 );
 
-
-        /*
-         * Only bookings waiting for dispatch belong here.
-         */
         bookings.removeIf(
                 booking ->
                         !Booking.STATUS_QUEUED.equals(
@@ -517,22 +389,13 @@ public class BookingController {
                         )
         );
 
-
-        /*
-         * Sort according to the required dispatch policy.
-         */
         bookings.sort(
                 BookingController::compareDispatchPriority
         );
 
-
         return bookings;
     }
 
-
-    /**
-     * Compares two bookings according to ADMIN dispatch priority.
-     */
     private static int compareDispatchPriority(
             Booking a,
             Booking b) {
@@ -543,10 +406,6 @@ public class BookingController {
         int bPriority =
                 bookingPriority(b);
 
-
-        /*
-         * First compare booking type.
-         */
         if (aPriority != bPriority) {
             return Integer.compare(
                     aPriority,
@@ -554,12 +413,6 @@ public class BookingController {
             );
         }
 
-
-        /*
-         * Emergency and instant:
-         *
-         * oldest createdAt first.
-         */
         if (aPriority == 0
                 || aPriority == 1) {
 
@@ -569,12 +422,6 @@ public class BookingController {
             );
         }
 
-
-        /*
-         * Reserve:
-         *
-         * earliest scheduled slot first.
-         */
         if (aPriority == 2) {
 
             int scheduledComparison =
@@ -587,49 +434,24 @@ public class BookingController {
                 return scheduledComparison;
             }
 
-
-            /*
-             * If two reserved bookings have the same
-             * scheduled time, use createdAt as the
-             * tie breaker.
-             */
             return compareCreatedAt(
                     a,
                     b
             );
         }
 
-
-        /*
-         * Unknown types:
-         *
-         * oldest first.
-         */
         return compareCreatedAt(
                 a,
                 b
         );
     }
 
-
-    /**
-     * Returns the numerical dispatch priority.
-     *
-     * Lower number = higher priority.
-     */
     private static int bookingPriority(
             Booking booking) {
 
         String type =
                 booking.getBookingType();
 
-
-        /*
-         * Emergency is always first.
-         *
-         * Also support legacy bookings where
-         * isEmergency is true but bookingType is absent.
-         */
         if (Booking.TYPE_EMERGENCY.equals(
                 type)
                 || booking.isEmergency()) {
@@ -637,13 +459,11 @@ public class BookingController {
             return 0;
         }
 
-
         if (Booking.TYPE_INSTANT.equals(
                 type)) {
 
             return 1;
         }
-
 
         if (Booking.TYPE_RESERVE.equals(
                 type)) {
@@ -651,21 +471,9 @@ public class BookingController {
             return 2;
         }
 
-
-        /*
-         * Legacy/unknown booking types are treated
-         * as lowest priority.
-         */
         return 3;
     }
 
-
-    /**
-     * Compares ISO-8601 createdAt values.
-     *
-     * The project stores createdAt using Instant.toString(),
-     * so lexical comparison is valid for these values.
-     */
     private static int compareCreatedAt(
             Booking a,
             Booking b) {
@@ -685,17 +493,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Compares scheduled times.
-     *
-     * Current reserve UI stores values such as:
-     *
-     * Today, 03:30 PM
-     * Today, 04:30 PM
-     *
-     * ISO date/time values are also supported for future use.
-     */
     private static int compareScheduledTime(
             Booking a,
             Booking b) {
@@ -710,7 +507,6 @@ public class BookingController {
                         b.getScheduledTime()
                 );
 
-
         if (left != null
                 && right != null) {
 
@@ -719,16 +515,13 @@ public class BookingController {
             );
         }
 
-
         if (left != null) {
             return -1;
         }
 
-
         if (right != null) {
             return 1;
         }
-
 
         String leftText =
                 a.getScheduledTime() == null
@@ -740,17 +533,11 @@ public class BookingController {
                         ? ""
                         : b.getScheduledTime();
 
-
         return leftText.compareTo(
                 rightText
         );
     }
 
-
-    /**
-     * Parses the current booking time formats without
-     * changing how the UI stores them.
-     */
     private static LocalTime parseScheduledTime(
             String scheduledTime) {
 
@@ -760,16 +547,9 @@ public class BookingController {
             return null;
         }
 
-
         String value =
                 scheduledTime.trim();
 
-
-        /*
-         * Current UI format:
-         *
-         * Today, 03:30 PM
-         */
         int commaIndex =
                 value.lastIndexOf(',');
 
@@ -791,16 +571,9 @@ public class BookingController {
                 );
 
             } catch (Exception ignored) {
-                // Continue to other formats.
             }
         }
 
-
-        /*
-         * Direct time format:
-         *
-         * 03:30 PM
-         */
         try {
 
             return LocalTime.parse(
@@ -812,15 +585,8 @@ public class BookingController {
             );
 
         } catch (Exception ignored) {
-            // Continue.
         }
 
-
-        /*
-         * ISO LocalDateTime:
-         *
-         * 2026-09-04T15:30:00
-         */
         try {
 
             return LocalDateTime.parse(
@@ -828,13 +594,8 @@ public class BookingController {
             ).toLocalTime();
 
         } catch (Exception ignored) {
-            // Not an ISO LocalDateTime.
         }
 
-
-        /*
-         * ISO LocalTime:
-         */
         try {
 
             return LocalTime.parse(
@@ -846,8 +607,6 @@ public class BookingController {
         }
     }
 
-
-    /** New writes use a timezone-safe instant; legacy UI labels remain readable. */
     private static String canonicalScheduledTime(String scheduledTime) {
 
         Instant parsed =
@@ -890,23 +649,6 @@ public class BookingController {
                 : scheduledTime;
     }
 
-
-    /**
-     * ADMIN dispatch method.
-     *
-     * The ADMIN selects a BUS.
-     *
-     * For normal bookings:
-     *
-     *     QUEUED -> ASSIGNED
-     *
-     * For emergency bookings:
-     *
-     *     QUEUED -> PENDING_DRIVER_ACCEPT
-     *
-     * The driver must explicitly accept/start the emergency trip before
-     * the booking becomes EN_ROUTE.
-     */
     public boolean assignBus(
             String bookingId,
             String busId) {
@@ -926,14 +668,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Get the booking BEFORE assigning it.
-         *
-         * We need the emergency flag so that emergency dispatches can
-         * enter PENDING_DRIVER_ACCEPT instead of immediately becoming
-         * ASSIGNED.
-         */
         Booking booking =
                 bookingDao.getBooking(
                         bookingId,
@@ -951,10 +685,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Get the bus selected by ADMIN.
-         */
         Bus bus =
                 busDao.getBus(
                         busId,
@@ -974,10 +704,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Get the driver permanently assigned to this bus.
-         */
         String driverId =
                 resolveDriverId(
                         bus
@@ -997,18 +723,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Assign BOTH:
-         *
-         * busId
-         * driverId
-         *
-         * to the booking.
-         *
-         * Emergency bookings enter PENDING_DRIVER_ACCEPT.
-         * Normal bookings enter ASSIGNED.
-         */
         boolean ok =
                 bookingDao.assignBus(
                         bookingId,
@@ -1022,10 +736,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Notify the selected driver.
-         */
         notifyAssignedDriver(
                 bus,
                 driverId,
@@ -1035,10 +745,6 @@ public class BookingController {
                 booking.isEmergency()
         );
 
-
-        /*
-         * Notify admins that the assignment is complete.
-         */
         notifyAdminsOfDriverLink(
                 bookingId,
                 driverId,
@@ -1046,14 +752,6 @@ public class BookingController {
                 booking.isEmergency()
         );
 
-
-        /*
-         * Notify OWNER that ADMIN has assigned the bus and driver.
-         *
-         * This is intentionally called directly rather than through
-         * notifyOwnerOfDriverUpdate(), because that helper is restricted
-         * to the currently logged-in DRIVER.
-         */
         String assignmentStatus =
                 booking.isEmergency()
                         ? Booking.STATUS_PENDING_DRIVER_ACCEPT
@@ -1094,10 +792,8 @@ public class BookingController {
                 bookingId
         );
 
-
         return true;
     }
-
 
     public List<Booking> getMyBookings() {
 
@@ -1114,10 +810,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Every booking this driver is responsible for.
-     */
     public List<Booking> getBookingsForCurrentDriver() {
 
         AuthSession session =
@@ -1127,7 +819,6 @@ public class BookingController {
             return new ArrayList<>();
         }
 
-
         Driver driver =
                 driverDao.getCurrentDriver();
 
@@ -1135,17 +826,12 @@ public class BookingController {
             return new ArrayList<>();
         }
 
-
         String uid =
                 session.getUid();
 
         Map<String, Booking> byId =
                 new LinkedHashMap<>();
 
-
-        /*
-         * First get bookings explicitly assigned to this driver.
-         */
         for (Booking b :
                 bookingDao.getBookingsForDriver(
                         uid,
@@ -1157,10 +843,6 @@ public class BookingController {
             );
         }
 
-
-        /*
-         * Resolve this driver's permanently assigned bus.
-         */
         Bus myBus =
                 busDao.resolveBusForDriver(
                         uid,
@@ -1168,17 +850,11 @@ public class BookingController {
                         session.getIdToken()
                 );
 
-
         String busId =
                 myBus == null
                         ? null
                         : myBus.getId();
 
-
-        /*
-         * Also check bookings assigned to this bus but which
-         * have not yet claimed a driver.
-         */
         if (busId != null
                 && !busId.isEmpty()) {
 
@@ -1207,21 +883,15 @@ public class BookingController {
             }
         }
 
-
         return new ArrayList<>(
                 byId.values()
         );
     }
 
-
-    /**
-     * The emergency dispatch this driver still has to answer.
-     */
     public Booking getPendingEmergencyBookingForCurrentDriver() {
 
         Booking oldest =
                 null;
-
 
         for (Booking b :
                 getBookingsForCurrentDriver()) {
@@ -1231,7 +901,6 @@ public class BookingController {
 
                 continue;
             }
-
 
             if (oldest == null
                     || compareCreatedAt(
@@ -1243,14 +912,9 @@ public class BookingController {
             }
         }
 
-
         return oldest;
     }
 
-
-    /**
-     * Driver declines an emergency diversion.
-     */
     public boolean rejectEmergency(
             String bookingId) {
 
@@ -1264,19 +928,16 @@ public class BookingController {
             return false;
         }
 
-
         Booking booking =
                 bookingDao.getBooking(
                         bookingId,
                         session.getIdToken()
                 );
 
-
         String rejectedDriverId =
                 booking == null
                         ? ""
                         : booking.getDriverId();
-
 
         boolean ok =
                 bookingDao.clearEmergencyDispatch(
@@ -1284,17 +945,14 @@ public class BookingController {
                         session.getIdToken()
                 );
 
-
         if (!ok) {
             return false;
         }
-
 
         Driver driver =
                 driverController.getDriver(
                         rejectedDriverId
                 );
-
 
         String driverLabel =
                 driver != null
@@ -1306,7 +964,6 @@ public class BookingController {
                                         ? "the driver"
                                         : rejectedDriverId);
 
-
         notificationController.notifyAdmins(
                 "emergency_rejected",
                 "Emergency booking "
@@ -1317,10 +974,8 @@ public class BookingController {
                 bookingId
         );
 
-
         return true;
     }
-
 
     public boolean startTrip(
             String bookingId) {
@@ -1336,16 +991,11 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Get the booking before changing anything.
-         */
         Booking booking =
                 bookingDao.getBooking(
                         bookingId,
                         session.getIdToken()
                 );
-
 
         if (booking == null) {
 
@@ -1358,16 +1008,8 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * A booking must already have a driver assigned.
-         *
-         * This prevents live tracking / trip confirmation
-         * from starting before ADMIN dispatches the booking.
-         */
         String assignedDriverId =
                 booking.getDriverId();
-
 
         if (assignedDriverId == null
                 || assignedDriverId.isEmpty()
@@ -1382,11 +1024,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Only the driver assigned to this booking may
-         * confirm/start the trip.
-         */
         if (!session.getUid().equals(
                 assignedDriverId)) {
 
@@ -1400,21 +1037,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Driver confirmation.
-         *
-         * EN_ROUTE is the existing project status used after
-         * the driver confirms the booking and starts travelling.
-         *
-         * LiveTracking should only display the driver's tracking
-         * location when:
-         *
-         *   1. driverId is assigned
-         *   2. status is EN_ROUTE
-         *
-         * This preserves the existing UI and navigation flow.
-         */
         boolean updated =
                 bookingDao.updateStatus(
                         bookingId,
@@ -1426,11 +1048,6 @@ public class BookingController {
             return false;
         }
 
-
-        /*
-         * Get the actual assigned bus so the owner notification
-         * contains the real bus information.
-         */
         Bus bus =
                 booking.getBusId() == null
                         || booking.getBusId().isEmpty()
@@ -1440,7 +1057,6 @@ public class BookingController {
                                         session.getIdToken()
                                 );
 
-
         String busCode =
                 bus != null
                         && bus.getBusCode() != null
@@ -1448,12 +1064,10 @@ public class BookingController {
                                 ? bus.getBusCode()
                                 : booking.getBusId();
 
-
         Driver driver =
                 driverController.getDriver(
                         assignedDriverId
                 );
-
 
         String driverName =
                 driver != null
@@ -1462,13 +1076,6 @@ public class BookingController {
                                 ? driver.getName()
                                 : assignedDriverId;
 
-
-        /*
-         * Second owner notification:
-         *
-         * ADMIN assignment already happened.
-         * DRIVER has now accepted/started the trip.
-         */
         notificationController.notifyOwnerOfDriverUpdate(
                 booking.getOwnerId(),
                 "driver_booking_accepted",
@@ -1486,10 +1093,6 @@ public class BookingController {
                 booking.getId()
         );
 
-
-        /*
-         * Keep the existing admin notification.
-         */
         notificationController.notifyAdmins(
                 "driver_response",
                 "Driver "
@@ -1502,10 +1105,8 @@ public class BookingController {
                 booking.getId()
         );
 
-
         return true;
     }
-
 
     public boolean markArrived(
             String bookingId) {
@@ -1525,10 +1126,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Owner gets OTP for their booking.
-     */
     public String getOtpForBooking(
             String bookingId) {
 
@@ -1545,10 +1142,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Driver submits OTP and starts charging.
-     */
     public boolean verifyOtpAndStartCharging(
             String bookingId,
             String otpAttempt) {
@@ -1563,7 +1156,6 @@ public class BookingController {
             return false;
         }
 
-
         if (otpAttempt == null
                 || !otpAttempt.matches(
                         "\\d{6}"
@@ -1576,14 +1168,12 @@ public class BookingController {
             return false;
         }
 
-
         boolean ok =
                 bookingDao.startChargingWithOtp(
                         bookingId,
                         otpAttempt,
                         session.getIdToken()
                 );
-
 
         if (ok) {
 
@@ -1604,7 +1194,6 @@ public class BookingController {
                     session.getIdToken()
             );
 
-
             notificationController.notifyAdmins(
                     "charging_started",
                     "Booking "
@@ -1614,10 +1203,8 @@ public class BookingController {
             );
         }
 
-
         return ok;
     }
-
 
     private void openChargingSession(
             String bookingId,
@@ -1628,7 +1215,6 @@ public class BookingController {
                         bookingId,
                         idToken
                 );
-
 
         if (booking == null) {
 
@@ -1641,10 +1227,8 @@ public class BookingController {
             return;
         }
 
-
         ChargingSession charging =
                 new ChargingSession();
-
 
         charging.setOwnerId(
                 booking.getOwnerId()
@@ -1670,7 +1254,6 @@ public class BookingController {
                 ""
         );
 
-
         if (sessionDao.createSession(
                 charging,
                 idToken
@@ -1683,7 +1266,6 @@ public class BookingController {
             );
         }
     }
-
 
     public boolean startCharging(
             String bookingId) {
@@ -1702,10 +1284,6 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Completes the booking.
-     */
     public boolean completeBooking(
             String bookingId) {
 
@@ -1716,13 +1294,11 @@ public class BookingController {
             return false;
         }
 
-
         Booking toSettle =
                 bookingDao.getBooking(
                         bookingId,
                         session.getIdToken()
                 );
-
 
         if (toSettle == null) {
 
@@ -1735,7 +1311,6 @@ public class BookingController {
             return false;
         }
 
-
         if (!settlePayment(
                 toSettle,
                 session
@@ -1743,7 +1318,6 @@ public class BookingController {
 
             return false;
         }
-
 
         if (!bookingDao.updateStatus(
                 bookingId,
@@ -1754,13 +1328,11 @@ public class BookingController {
             return false;
         }
 
-
         ChargingSession open =
                 sessionDao.getSessionForBooking(
                         bookingId,
                         session.getIdToken()
                 );
-
 
         if (open != null
                 && !sessionDao.completeSession(
@@ -1775,17 +1347,14 @@ public class BookingController {
             );
         }
 
-
         notifyOwnerOfDriverUpdate(
                 toSettle,
                 "driver_response",
                 "Charging has been completed for your booking."
         );
 
-
         return true;
     }
-
 
     private boolean updateDriverStatusAndNotifyOwner(
             String bookingId,
@@ -1800,13 +1369,11 @@ public class BookingController {
             return false;
         }
 
-
         Booking booking =
                 bookingDao.getBooking(
                         bookingId,
                         session.getIdToken()
                 );
-
 
         boolean updated =
                 bookingDao.updateStatus(
@@ -1814,7 +1381,6 @@ public class BookingController {
                         status,
                         session.getIdToken()
                 );
-
 
         if (updated) {
 
@@ -1825,10 +1391,8 @@ public class BookingController {
             );
         }
 
-
         return updated;
     }
-
 
     private void notifyOwnerOfDriverUpdate(
             Booking booking,
@@ -1845,7 +1409,6 @@ public class BookingController {
             return;
         }
 
-
         notificationController.notifyOwnerOfDriverUpdate(
                 booking.getOwnerId(),
                 type,
@@ -1853,7 +1416,6 @@ public class BookingController {
                 booking.getId()
         );
     }
-
 
     public Booking getMyUpcomingBooking() {
 
@@ -1870,17 +1432,12 @@ public class BookingController {
         );
     }
 
-
-    /**
-     * Charges the customer and credits the driver.
-     */
     private boolean settlePayment(
             Booking booking,
             AuthSession session) {
 
         String idToken =
                 session.getIdToken();
-
 
         if (driverEarningDao.existsForBooking(
                 booking.getId(),
@@ -1896,13 +1453,11 @@ public class BookingController {
             return true;
         }
 
-
         double fare =
                 booking.fareToBill();
 
         double payout =
                 booking.payoutToPay();
-
 
         WalletTransaction charge =
                 new WalletTransaction(
@@ -1914,7 +1469,6 @@ public class BookingController {
                         Instant.now().toString(),
                         booking.getId()
                 );
-
 
         if (walletDao.addTransaction(
                 charge,
@@ -1930,10 +1484,8 @@ public class BookingController {
             return false;
         }
 
-
         String driverId =
                 booking.getDriverId();
-
 
         if (driverId == null
                 || driverId.isEmpty()
@@ -1948,7 +1500,6 @@ public class BookingController {
             return true;
         }
 
-
         DriverEarning earning =
                 new DriverEarning(
                         null,
@@ -1959,7 +1510,6 @@ public class BookingController {
                         fare,
                         Instant.now().toString()
                 );
-
 
         if (driverEarningDao.createEarning(
                 earning,
@@ -1975,7 +1525,6 @@ public class BookingController {
             return false;
         }
 
-
         notificationController.notifyUser(
                 driverId,
                 "earning_credited",
@@ -1988,10 +1537,8 @@ public class BookingController {
                 booking.getId()
         );
 
-
         return true;
     }
-
 
     public boolean cancelBooking(
             String bookingId) {
@@ -2003,13 +1550,11 @@ public class BookingController {
             return false;
         }
 
-
         Booking booking =
                 bookingDao.getBooking(
                         bookingId,
                         session.getIdToken()
                 );
-
 
         if (!bookingDao.updateStatus(
                 bookingId,
@@ -2020,12 +1565,10 @@ public class BookingController {
             return false;
         }
 
-
         if (booking != null) {
 
             String driverId =
                     booking.getDriverId();
-
 
             if (driverId != null
                     && !driverId.isEmpty()
@@ -2043,7 +1586,6 @@ public class BookingController {
                 );
             }
         }
-
 
         return true;
     }
