@@ -43,6 +43,12 @@ public class TicketController {
         return count;
     }
 
+    /**
+     * Raises an owner support ticket. If no booking is supplied, the owner's
+     * current/most-recent booking is auto-linked (same lookup the dashboard
+     * uses for "upcoming booking"); the ticket is still raised even if the
+     * owner has none.
+     */
     public String submitOwnerIssue(
             Booking booking,
             String subject,

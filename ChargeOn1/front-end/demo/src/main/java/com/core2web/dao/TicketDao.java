@@ -13,11 +13,13 @@ public class TicketDao {
 
     private static final String COLLECTION = "tickets";
 
+
     public List<Ticket> getAllTickets(String idToken) {
         List<JSONObject> docs = FirestoreHelper.listCollection(COLLECTION, idToken);
         return toDomainList(docs);
     }
 
+    /** Stores an owner support request so it appears in the admin Support queue. */
     public String createTicket(Ticket ticket, String idToken) {
         if (ticket == null) {
             return null;
@@ -37,6 +39,7 @@ public class TicketDao {
         return FirestoreHelper.createDocument(COLLECTION, fields, idToken);
     }
 
+
     public boolean updateStatus(String ticketId, String newStatus, String idToken) {
         return FirestoreHelper.updateFields(
                 COLLECTION, ticketId,
@@ -45,6 +48,7 @@ public class TicketDao {
         );
     }
 
+
     public boolean updatePriority(String ticketId, String newPriority, String idToken) {
         return FirestoreHelper.updateFields(
                 COLLECTION, ticketId,
@@ -52,6 +56,7 @@ public class TicketDao {
                 idToken
         );
     }
+
 
     private List<Ticket> toDomainList(List<JSONObject> docs) {
         List<Ticket> list = new ArrayList<>();

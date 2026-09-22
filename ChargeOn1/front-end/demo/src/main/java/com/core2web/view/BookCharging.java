@@ -49,14 +49,25 @@ public class BookCharging {
     private static final WalletController walletController =
             new WalletController();
 
+    // Rates live in model/Pricing so the quote here and the receipt at completion
+    // can never disagree.
+
     static final String MODE_INSTANT = "instant";
     static final String MODE_RESERVE = "reserve";
     static final String MODE_EMERGENCY = "emergency";
 
+    /**
+     * Tab to open on the next render, set by whoever navigates here.
+     *
+     * <p>One-shot: buildMainContent() consumes it and resets to Instant, so
+     * arriving via the sidebar afterwards doesn't inherit a previous tile's choice.
+     */
     private static String pendingMode = MODE_INSTANT;
 
+    /** The fleet map, held so its pulse animation can be stopped on teardown. */
     private GluonMapPane mapPane;
 
+    /** Opens Book Charging with a specific tab pre-selected. */
     static void openWith(String mode) {
 
         pendingMode =
@@ -141,6 +152,8 @@ public class BookCharging {
                 tabs,
                 mapSection);
 
+        // Opens on whichever tab the caller asked for, so the dashboard's
+        // "Emergency charge" tile lands on the emergency form rather than Instant.
         VBox rightCol =
                 buildBookingForm(mode);
 
@@ -210,6 +223,7 @@ public class BookCharging {
         return scrollPane;
     }
 
+    /** Marks one tab active; Emergency uses the danger variant. */
     private static void highlightTab(
             String mode,
             Button instant,
@@ -285,6 +299,13 @@ public class BookCharging {
         return item;
     }
 
+    /**
+     * Real map of the buses the owner can actually book.
+     *
+     * <p>The owner pickup map is also created even when there is currently
+     * no bus location data. This is important because "Find on map" must
+     * work independently of bus-location data.
+     */
     private javafx.scene.layout.Region buildMapArea() {
 
         Map<String, BusLocation> positions =
@@ -324,6 +345,17 @@ public class BookCharging {
                     loc.getLongitude();
         }
 
+        /*
+         * If bus positions exist, keep the existing behavior and initially
+         * center the map around them.
+         *
+         * If there are no bus positions, we still create the map so that
+         * the owner's "Find on map" functionality works.
+         *
+         * 0,0 here is only a neutral initial map coordinate. It is NOT
+         * a hardcoded city or pickup location. The moment the owner searches,
+         * the map is moved to the actual geocoded coordinates.
+         */
         double initialLat;
         double initialLng;
         double initialZoom;
@@ -450,6 +482,8 @@ public class BookCharging {
                 psp,
                 pinIcon);
 
+        // Explicit search rather than per-keystroke lookup: Nominatim allows about
+        // one request a second, so autocomplete would breach its usage policy.
         Button findBtn =
                 new Button("Find on map");
 
@@ -468,9 +502,13 @@ public class BookCharging {
         pickupStatus.setVisible(false);
         pickupStatus.setManaged(false);
 
+        // Resolved coordinates for the typed pickup, or null for "unknown". A null
+        // never blocks the booking — the text location is still submitted.
         final GeocodingService.Result[] pickupPoint =
                 { null };
 
+        // Any edit invalidates a previous resolution, so we never submit
+        // coordinates belonging to an address the owner has since changed.
         pickupVal.textProperty().addListener(
                 (obs, old, text) -> {
 
@@ -634,6 +672,7 @@ public class BookCharging {
                     0,
                     1);
 
+            // This slot is full, so it remains non-selectable.
             slotGrid.add(
                     slotTile(
                             DateTimeUtil.time(reserve120),
@@ -921,6 +960,9 @@ public class BookCharging {
 
         refreshCost.run();
 
+        // Prepaid wallet: the customer must be able to cover the fare before a bus
+        // is dispatched. Checked here, not at completion, because the driver has no
+        // read access to the customer's wallet.
         Label balanceLbl =
                 new Label();
 
@@ -1073,6 +1115,7 @@ public class BookCharging {
                         return;
                     }
 
+                    // Reserve bookings must have an actual slot selected.
                     if (MODE_RESERVE.equals(mode)
                             && "Awaiting slot confirmation"
                                     .equals(scheduledTimeHolder[0])) {
@@ -1097,6 +1140,7 @@ public class BookCharging {
                                     kwh,
                                     isEmergency);
 
+                    // Hard block: don't dispatch a bus the customer can't pay for.
                     if (walletBalance < fare) {
 
                         errorLbl.setText(
@@ -1120,6 +1164,8 @@ public class BookCharging {
                     String scheduledTime =
                             scheduledTimeHolder[0];
 
+                    // Coordinates only if "Find on map" resolved them.
+                    // Otherwise 0/0 means "position unknown".
                     double pickupLat =
                             pickupPoint[0] == null
                                     ? 0
@@ -1180,6 +1226,13 @@ public class BookCharging {
                 confirmBtn);
     }
 
+    /**
+     * Creates a real upcoming reservation time instead of a hardcoded/demo time.
+     *
+     * <p>The returned value is kept as an ISO local date-time string because the
+     * booking flow already passes the selected String through to BookingController.
+     * DateTimeUtil.time(...) is used only for the existing UI display.
+     */
     private static String reservationSlot(int minutesFromNow) {
 
         if (minutesFromNow < 0) {
@@ -1204,6 +1257,11 @@ public class BookCharging {
                 + " kWh";
     }
 
+    /**
+     * Resolves the typed pickup text to coordinates via GeocodingService.
+     *
+     * <p>Geocoding is network I/O, so it runs off the FX thread.
+     */
     private void resolvePickup(
             String text,
             Button findBtn,
@@ -1262,6 +1320,14 @@ public class BookCharging {
 
                                         } else {
 
+                                            /*
+                                             * THIS IS THE IMPORTANT CHANGE.
+                                             *
+                                             * The coordinates come directly from
+                                             * GeocodingService.
+                                             *
+                                             * Nothing is hardcoded.
+                                             */
                                             if (mapPane != null) {
 
                                                 mapPane.setPickupLocation(

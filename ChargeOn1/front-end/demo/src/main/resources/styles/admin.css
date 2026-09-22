@@ -1,8 +1,12 @@
+
+
+
 .root {
     -fx-font-family: "Segoe UI", "System";
     -fx-base: #0f1720;
     -fx-background-color: #0f1720;
 }
+
 
 .sidebar {
     -fx-background-color: #0b1116;
@@ -23,6 +27,7 @@
     -fx-padding: 4 0 0 2;
 }
 
+
 .nav-item {
     -fx-background-color: transparent;
     -fx-background-radius: 8;
@@ -40,6 +45,7 @@
     -fx-border-radius: 0 8 8 0;
     -fx-background-radius: 8;
 }
+
 
 .shift-card {
     -fx-background-color: #111827;
@@ -77,6 +83,7 @@
     -fx-text-fill: #4b5563;
     -fx-font-size: 10px;
 }
+
 
 .topbar {
     -fx-background-color: #0f1720;
@@ -121,6 +128,7 @@
     -fx-background-color: rgba(16, 185, 129, 0.06);
 }
 
+
 .emergency-banner {
     -fx-background-color: rgba(239, 68, 68, 0.08);
     -fx-border-color: rgba(239, 68, 68, 0.4);
@@ -139,6 +147,7 @@
     -fx-text-fill: #94a3b8;
     -fx-font-size: 12px;
 }
+
 
 .card {
     -fx-background-color: #111827;
@@ -178,6 +187,7 @@
     -fx-font-weight: bold;
 }
 
+
 .map-placeholder {
     -fx-background-color: #0b1420;
     -fx-background-radius: 10;
@@ -191,6 +201,7 @@
     -fx-font-size: 13px;
 }
 
+
 .bookings-section {
     -fx-background-color: #111827;
     -fx-background-radius: 14;
@@ -203,6 +214,7 @@
     -fx-font-size: 16px;
     -fx-font-weight: bold;
 }
+
 
 .filter-tabs-container {
     -fx-background-color: #1e293b;
@@ -235,6 +247,7 @@
     -fx-cursor: hand;
 }
 
+
 .booking-row {
     -fx-background-color: transparent;
     -fx-border-color: transparent transparent #1e293b transparent;
@@ -245,6 +258,7 @@
 .booking-row:hover {
     -fx-background-color: rgba(255, 255, 255, 0.02);
 }
+
 
 .assignment-card {
     -fx-background-color: #111827;
@@ -272,6 +286,7 @@
     -fx-border-width: 1;
 }
 
+
 .port-card {
     -fx-background-color: #0f1720;
     -fx-background-radius: 10;
@@ -279,6 +294,7 @@
     -fx-border-color: #1e293b;
     -fx-border-width: 1;
 }
+
 
 .session-log-card {
     -fx-background-color: #111827;
@@ -291,6 +307,7 @@
     -fx-text-fill: #64748b;
     -fx-font-size: 11px;
 }
+
 
 .battery-bar {
     -fx-pref-height: 6;
@@ -330,6 +347,7 @@
 .progress-bar .bar {
     -fx-background-color: #10b981;
 }
+
 
 .primary-btn {
     -fx-background-color: #10b981;
@@ -419,6 +437,7 @@
     -fx-background-color: #dc2626;
 }
 
+
 .scroll-pane {
     -fx-background-color: transparent;
 }
@@ -449,6 +468,7 @@
     -fx-pref-height: 0;
     -fx-max-height: 0;
 }
+/* Remove blue focus border from sidebar navigation buttons */
 .nav-button {
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;

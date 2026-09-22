@@ -18,6 +18,14 @@ import com.core2web.controller.OwnerController;
 import com.core2web.model.Booking;
 import com.core2web.model.Owner;
 
+/**
+ * The driver's accept/reject banner for a pending emergency diversion.
+ *
+ * <p>Shared by the driver dashboard and the driver bookings page so the accept and
+ * reject wiring exists once. Callers only build this when
+ * {@link BookingController#getPendingEmergencyBookingForCurrentDriver()} returned a
+ * booking; when there is none the banner is never added to the layout at all.
+ */
 final class EmergencyBanner {
 
     private static final BookingController bookingController = new BookingController();
@@ -26,6 +34,11 @@ final class EmergencyBanner {
     private EmergencyBanner() {
     }
 
+    /**
+     * @param pending    the emergency booking awaiting this driver's answer
+     * @param onResolved run on the FX thread once accept or reject succeeded, so the
+     *                   host view can re-read bookings and drop the banner
+     */
     static HBox build(Booking pending, Runnable onResolved) {
 
         HBox banner = new HBox(14);
@@ -56,6 +69,7 @@ final class EmergencyBanner {
         Button accept = new Button("Accept diversion");
         accept.getStyleClass().add("danger-btn");
 
+        // Accept reuses startTrip(), the single place EN_ROUTE is set.
         accept.setOnAction(e -> run(
                 () -> bookingController.startTrip(pending.getId()),
                 "Couldn't accept the diversion. Please try again.",
@@ -104,6 +118,7 @@ final class EmergencyBanner {
         worker.start();
     }
 
+    /** Real pickup location, energy and requester for this booking. */
     private static String subtitle(Booking pending) {
         StringBuilder sb = new StringBuilder();
 

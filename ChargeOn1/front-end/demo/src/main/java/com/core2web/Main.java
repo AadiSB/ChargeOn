@@ -12,6 +12,7 @@ public class Main {
         try {
             Class.forName("com.core2web.config.FirebaseInitialize");
         } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         System.out.println("Hello world!");

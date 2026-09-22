@@ -6,11 +6,19 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+/**
+ * Stand-in panel for the screens that used to draw a map.
+ *
+ * <p>Says plainly that there is no map rather than drawing a decorative grid — the
+ * position data behind it is still real and still shown as text, so a fake map
+ * would be the only dishonest thing on the screen.
+ */
 final class MapPlaceholder {
 
     private MapPlaceholder() {
     }
 
+    /** @param detail what the caller would have plotted, in words */
     static Region of(String detail) {
 
         Label title = new Label("Map view not available");

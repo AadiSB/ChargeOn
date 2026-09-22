@@ -36,6 +36,7 @@ public class ChargingSession {
         this.completedAt = completedAt;
     }
 
+
     public String getId()          { return id; }
     public String getOwnerId()     { return ownerId; }
     public String getBookingId()   { return bookingId; }
@@ -48,6 +49,7 @@ public class ChargingSession {
     public int    getTargetSoc()   { return targetSoc; }
     public String getStartedAt()   { return startedAt; }
     public String getCompletedAt() { return completedAt; }
+
 
     public void setId(String id)                   { this.id = id; }
     public void setOwnerId(String ownerId)         { this.ownerId = ownerId; }
@@ -69,10 +71,20 @@ public class ChargingSession {
         return STATUS_ACTIVE.equalsIgnoreCase(status);
     }
 
+    /**
+     * Whether live telemetry is attached to this session.
+     *
+     * <p>Sessions are opened when the driver verifies the customer's code, which
+     * tells us the session exists and when it began — but there is no charger
+     * hardware feeding back progress, so powerKw and friends stay 0. Callers must
+     * check this before rendering progress, otherwise an unmeasured session reads as
+     * "0 kW, ₹0" which looks like a fault rather than "not measured".
+     */
     public boolean hasLiveMeter() {
         return powerKw > 0 || currentKwh > 0 || batteryPct > 0;
     }
 
+    /** How long the session has been running, e.g. "12 min" / "1 hr 5 min". */
     public String elapsedLabel() {
         if (startedAt == null || startedAt.isEmpty()) {
             return "—";

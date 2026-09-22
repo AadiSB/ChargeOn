@@ -1,3 +1,4 @@
+
 package com.core2web.view;
 
 import java.time.Instant;
@@ -54,15 +55,21 @@ public class HistoryImpact {
 
         HBox statsRow = new HBox(14);
 
+        // Existing statistics logic kept unchanged
         populateStats(statsRow, bookings, transactions);
 
         HBox mainRow = new HBox(18);
         mainRow.setFillHeight(true);
 
+        // =========================================================
+        // MONTHLY USAGE - UI SIZE ONLY
+        // =========================================================
+
         VBox chartCard = new VBox(12);
         chartCard.getStyleClass().add("card");
         chartCard.setPadding(new Insets(22));
 
+        // Smaller chart section so Recent Sessions gets more space
         chartCard.setPrefWidth(500);
         chartCard.setMinWidth(450);
         chartCard.setMaxWidth(550);
@@ -80,6 +87,7 @@ public class HistoryImpact {
                 "-fx-font-size:11px;"
         );
 
+        // Smaller graph
         Canvas canvas = new Canvas(300, 120);
 
         HBox monthLabels = new HBox();
@@ -94,10 +102,15 @@ public class HistoryImpact {
 
         populateChart(canvas, monthLabels, bookings);
 
+        // =========================================================
+        // RECENT SESSIONS - MORE SPACE
+        // =========================================================
+
         VBox historyCard = new VBox(10);
         historyCard.getStyleClass().add("card");
         historyCard.setPadding(new Insets(22));
 
+        // Increased width for Recent Sessions
         historyCard.setPrefWidth(520);
         historyCard.setMinWidth(480);
         historyCard.setMaxWidth(Double.MAX_VALUE);
@@ -124,6 +137,10 @@ public class HistoryImpact {
                 histTitle,
                 sessionRows
         );
+
+        // =========================================================
+        // MAIN ROW
+        // =========================================================
 
         mainRow.getChildren().addAll(
                 chartCard,
@@ -154,6 +171,10 @@ public class HistoryImpact {
 
         return l;
     }
+
+    // =============================================================
+    // STATISTICS
+    // =============================================================
 
     private void populateStats(
             HBox statsRow,
@@ -188,6 +209,7 @@ public class HistoryImpact {
                         + " per session"
                 : "No completed sessions yet";
 
+        // CO2 calculation kept exactly as requested
         double co2Saved = totalEnergy * 0.7;
 
         String co2Value =
@@ -239,11 +261,17 @@ public class HistoryImpact {
         );
     }
 
+    // =============================================================
+    // MONTHLY CHART
+    // =============================================================
 private void populateChart(
         Canvas canvas,
         HBox monthLabels,
         List<com.core2web.model.Booking> bookings) {
 
+    /*
+     * Current month according to Indian time.
+     */
     YearMonth current =
             YearMonth.now(DateTimeUtil.INDIA);
 
@@ -253,6 +281,10 @@ private void populateChart(
     int currentMonth =
             current.getMonthValue();
 
+    /*
+     * Create January -> December
+     * of the current year.
+     */
     List<YearMonth> months =
             new ArrayList<>();
 
@@ -269,6 +301,9 @@ private void populateChart(
     double[] values =
             new double[12];
 
+    /*
+     * Read completed bookings from Firebase.
+     */
     for (com.core2web.model.Booking b : bookings) {
 
         if (!"COMPLETED".equals(b.getStatus())) {
@@ -286,6 +321,9 @@ private void populateChart(
                 continue;
             }
 
+            /*
+             * Convert booking time to India.
+             */
             YearMonth bookingMonth =
                     YearMonth.from(
                             timestamp.atZone(
@@ -293,6 +331,9 @@ private void populateChart(
                             )
                     );
 
+            /*
+             * Only current-year bookings.
+             */
             if (bookingMonth.getYear()
                     != currentYear) {
                 continue;
@@ -301,6 +342,9 @@ private void populateChart(
             int index =
                     bookingMonth.getMonthValue() - 1;
 
+            /*
+             * Don't put data into future months.
+             */
             if (index < currentMonth) {
 
                 values[index] += b.getKwh();
@@ -310,6 +354,9 @@ private void populateChart(
         }
     }
 
+    /*
+     * Use your EXISTING drawBarChart() method.
+     */
     drawBarChart(
             canvas.getGraphicsContext2D(),
             canvas.getWidth(),
@@ -317,8 +364,17 @@ private void populateChart(
             values
     );
 
+    /*
+     * =====================================================
+     * MONTH LABELS
+     * =====================================================
+     */
+
     monthLabels.getChildren().clear();
 
+    /*
+     * Exactly the same width as the canvas.
+     */
     monthLabels.setPrefWidth(
             canvas.getWidth()
     );
@@ -335,6 +391,9 @@ private void populateChart(
             Pos.CENTER
     );
 
+    /*
+     * 12 equal columns.
+     */
     double labelWidth =
             canvas.getWidth() / 12.0;
 
@@ -352,6 +411,9 @@ private void populateChart(
                                 )
                 );
 
+        /*
+         * Future months are visible but dimmed.
+         */
         if (i >= currentMonth) {
 
             ml.setStyle(
@@ -367,6 +429,9 @@ private void populateChart(
             );
         }
 
+        /*
+         * EXACT same column width.
+         */
         ml.setPrefWidth(
                 labelWidth
         );
@@ -386,6 +451,9 @@ private void populateChart(
         monthLabels.getChildren().add(ml);
     }
 }
+    // =============================================================
+    // RECENT SESSIONS
+    // =============================================================
 
     private void populateSessions(
             VBox sessionRows,
@@ -462,6 +530,10 @@ private void populateChart(
             com.core2web.model.Booking b =
                     finished.get(i);
 
+            /*
+             * Existing price lookup is unchanged.
+             * Only the UI layout has been adjusted.
+             */
             Double cost =
                     costByBooking.get(b.getId());
 
@@ -506,6 +578,10 @@ private void populateChart(
             return "—";
         }
     }
+
+    // =============================================================
+    // IMPACT CARD
+    // =============================================================
 
     private VBox impactCard(
             String icon,
@@ -572,6 +648,86 @@ private void populateChart(
         return card;
     }
 
+    // =============================================================
+    // BAR CHART DRAWING
+    // =============================================================
+
+    // private void drawBarChart(
+    //         GraphicsContext gc,
+    //         double width,
+    //         double height,
+    //         double[] values) {
+
+    //     gc.clearRect(
+    //             0,
+    //             0,
+    //             width,
+    //             height
+    //     );
+
+    //     int bars =
+    //             values.length;
+
+    //     double max = 0;
+
+    //     for (double v : values) {
+
+    //         max =
+    //                 Math.max(max, v);
+    //     }
+
+    //     double barWidth =
+    //             (width / bars) * 0.5;
+
+    //     double gap =
+    //             width / bars;
+
+    //     double maxBarHeight =
+    //             height - 10;
+
+    //     for (int i = 0; i < bars; i++) {
+
+    //         double frac =
+    //                 max > 0
+    //                         ? values[i] / max
+    //                         : 0;
+
+    //         double barHeight =
+    //                 frac * maxBarHeight;
+
+    //         double x =
+    //                 (i * gap)
+    //                         + (gap - barWidth) / 2;
+
+    //         double y =
+    //                 height - barHeight;
+
+    //         if (i == bars - 1) {
+
+    //             gc.setFill(
+    //                     Color.web("#10b981")
+    //             );
+
+    //         } else {
+
+    //             gc.setFill(
+    //                     Color.web("#0062ea")
+    //             );
+    //         }
+
+    //         gc.fillRoundRect(
+    //                 x,
+    //                 y,
+    //                 barWidth,
+    //                 Math.max(
+    //                         barHeight,
+    //                         0
+    //                 ),
+    //                 4,
+    //                 4
+    //         );
+    //     }
+    // }
     private void drawBarChart(
         GraphicsContext gc,
         double width,
@@ -588,8 +744,11 @@ private void populateChart(
         max = Math.max(max, v);
     }
 
+    // Each bar gets exactly the same column width
+    // as each month label.
     double columnWidth = width / bars;
 
+    // Smaller bar inside each month column
     double barWidth = columnWidth * 0.45;
 
     double maxBarHeight = height - 10;
@@ -602,6 +761,8 @@ private void populateChart(
 
         double barHeight = frac * maxBarHeight;
 
+        // Center the bar in the exact same column
+        // used by the corresponding month label.
         double x =
                 (i * columnWidth)
                 + (columnWidth - barWidth) / 2;
@@ -624,6 +785,10 @@ private void populateChart(
         );
     }
 }
+
+    // =============================================================
+    // RECENT SESSION ITEM
+    // =============================================================
 
     private HBox sessionItem(
             String id,
@@ -661,6 +826,10 @@ private void populateChart(
                         + "0 0 1 0;"
         );
 
+        // =========================================================
+        // LEFT SIDE - LOCATION + ID + DATE
+        // =========================================================
+
         VBox mainInfo =
                 new VBox(2);
 
@@ -697,6 +866,10 @@ private void populateChart(
                 idDateLbl
         );
 
+        // =========================================================
+        // RIGHT SIDE - PRICE + ENERGY
+        // =========================================================
+
         VBox rightInfo =
                 new VBox(2);
 
@@ -728,6 +901,10 @@ private void populateChart(
                 energyLbl
         );
 
+        // =========================================================
+        // STATUS
+        // =========================================================
+
         String statusColor =
                 status.equals("CANCELLED")
                         ? "#EF4444"
@@ -747,6 +924,10 @@ private void populateChart(
                         + "3 8 3 8;"
                         + "-fx-background-radius:4;"
         );
+
+        // =========================================================
+        // COMPLETE ROW
+        // =========================================================
 
         item.getChildren().addAll(
                 mainInfo,

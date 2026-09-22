@@ -79,6 +79,14 @@ final class GluonMapPane {
 
     private final MapLayer markerLayer;
 
+    /*
+     * These two markers define the static route.
+     *
+     * routeStart = pickup
+     * routeEnd   = bus/driver
+     *
+     * They are only coordinates read from Firestore.
+     */
     private Marker routeStart;
     private Marker routeEnd;
 
@@ -119,12 +127,18 @@ final class GluonMapPane {
                 Double.MAX_VALUE,
                 Double.MAX_VALUE);
 
+        /*
+         * Route/marker layer is added to the map.
+         */
         markerLayer =
                 createMarkerLayer();
 
         mapView.addLayer(
                 markerLayer);
 
+        /*
+         * Mouse wheel zoom.
+         */
         mapView.addEventFilter(
                 ScrollEvent.SCROLL,
                 event -> {
@@ -202,6 +216,16 @@ final class GluonMapPane {
         markerLayer.requestLayout();
     }
 
+    /**
+     * Defines the static route between two real coordinates.
+     *
+     * No GPS polling happens here.
+     *
+     * The route is simply a visual line between:
+     *
+     * start = pickup
+     * end   = bus/driver
+     */
     void setRoute(
             double startLatitude,
             double startLongitude,
@@ -245,6 +269,9 @@ final class GluonMapPane {
             private Line routeLine;
 
             {
+                /*
+                 * Create the normal markers.
+                 */
                 for (Marker m : markers) {
 
                     Circle dot =
@@ -271,6 +298,14 @@ final class GluonMapPane {
 
                 super.layoutLayer();
 
+                /*
+                 * ---------------------------------------------------------
+                 * STATIC ROUTE
+                 * ---------------------------------------------------------
+                 *
+                 * Draw the route BEFORE the markers so that the line
+                 * appears underneath the pickup and bus markers.
+                 */
                 if (routeStart != null
                         && routeEnd != null) {
 
@@ -284,11 +319,18 @@ final class GluonMapPane {
 
                         routeLine.setStrokeWidth(3);
 
+                        /*
+                         * Dashed line makes it visually clear that this
+                         * is the planned/static route representation.
+                         */
                         routeLine.getStrokeDashArray()
                                 .addAll(
                                         8.0,
                                         6.0);
 
+                        /*
+                         * Index 0 places the line behind all markers.
+                         */
                         getChildren().add(
                                 0,
                                 routeLine);
@@ -317,6 +359,11 @@ final class GluonMapPane {
                             endPoint.getY());
                 }
 
+                /*
+                 * ---------------------------------------------------------
+                 * NORMAL MARKERS
+                 * ---------------------------------------------------------
+                 */
                 for (int i = 0;
                         i < nodes.size();
                         i++) {
@@ -336,6 +383,14 @@ final class GluonMapPane {
                             point.getY());
                 }
 
+                /*
+                 * ---------------------------------------------------------
+                 * PICKUP MARKER
+                 * ---------------------------------------------------------
+                 *
+                 * This is retained for compatibility with the existing
+                 * setPickupLocation() functionality.
+                 */
                 if (pickupMarker != null) {
 
                     if (pickupNode == null) {

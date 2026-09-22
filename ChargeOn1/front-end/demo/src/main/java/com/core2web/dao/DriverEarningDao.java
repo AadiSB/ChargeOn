@@ -15,6 +15,8 @@ public class DriverEarningDao {
 
     private static final String COLLECTION = "DriverEarning";
 
+
+    /** Records a payout. Written by the driver as they complete the booking. */
     public String createEarning(DriverEarning earning, String idToken) {
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put("driverId", earning.getDriverId());
@@ -26,6 +28,7 @@ public class DriverEarningDao {
         return FirestoreHelper.createDocument(COLLECTION, fields, idToken);
     }
 
+
     public List<DriverEarning> getEarningsForDriver(String driverId, String idToken) {
         List<JSONObject> docs = FirestoreHelper.queryWithFilters(
                 COLLECTION,
@@ -35,6 +38,13 @@ public class DriverEarningDao {
         return toDomainList(docs);
     }
 
+
+    /**
+     * This driver's payouts since {@code since}, filtered in memory.
+     *
+     * <p>createdAt is an ISO-8601 string, so a date range cannot be a query filter —
+     * see {@link FirestoreHelper#isFieldOnOrAfter}.
+     */
     public List<DriverEarning> getEarningsSince(String driverId, Instant since, String idToken) {
         List<JSONObject> docs = FirestoreHelper.queryWithFilters(
                 COLLECTION,
@@ -45,6 +55,8 @@ public class DriverEarningDao {
         return toDomainList(docs);
     }
 
+
+    /** Guards against double-crediting if a completion is retried. */
     public boolean existsForBooking(String bookingId, String idToken) {
         List<JSONObject> docs = FirestoreHelper.queryWithFilters(
                 COLLECTION,
@@ -53,6 +65,7 @@ public class DriverEarningDao {
         );
         return !docs.isEmpty();
     }
+
 
     private List<DriverEarning> toDomainList(List<JSONObject> docs) {
         List<DriverEarning> list = new ArrayList<>();

@@ -29,6 +29,7 @@ public class OwnerDashboard {
 
     public static Stage homestage;
 
+
     static Stage window;
     static Scene scene;
     static ListView<String> sidebar;
@@ -39,6 +40,8 @@ public class OwnerDashboard {
     public static void show(Stage stage) {
 
         window = stage;
+        // Was never assigned, so every reader of it NPE'd. Kept in step with
+        // `window` for the external callers that still reference it.
         homestage = stage;
 
         sidebar = new ListView<>();
@@ -280,6 +283,7 @@ public class OwnerDashboard {
         );
     }
 
+
     private static void showPage(String page) {
 
         if (page == null) {
@@ -455,6 +459,7 @@ public class OwnerDashboard {
         return scene;
     }
 
+
     private static final OwnerDashboardController dashboardController =
             new OwnerDashboardController();
 
@@ -555,6 +560,9 @@ public class OwnerDashboard {
         trackBtn.setContentDisplay(ContentDisplay.LEFT);
         trackBtn.setGraphicTextGap(10);
         trackBtn.setMaxWidth(Double.MAX_VALUE);
+        // goTo() is the navigation; the old setScene(getLiveTrackingScene()) was
+        // redundant because that getter already calls goTo and hands back the same
+        // Scene that is on the stage.
         trackBtn.setOnAction(e -> goTo("Live Tracking"));
 
         card1.getChildren().addAll(
@@ -590,6 +598,7 @@ public class OwnerDashboard {
         return row;
     }
 
+    /** Compact white bus mark used by the primary tracking action. */
     private SVGPath busIcon() {
         SVGPath icon = new SVGPath();
         icon.setContent("M4 3h12c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2v1a1 1 0 0 1-2 0v-1H6v1a1 1 0 0 1-2 0v-1c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 3v5h12V6H4zm2 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z");
@@ -623,6 +632,7 @@ public class OwnerDashboard {
         boolean metered = session.hasLiveMeter();
 
         if (metered) {
+            // Real telemetry present: show the gauge and live figures.
             contentRow.getChildren().add(buildBatteryGauge(
                     session.getBatteryPct(),
                     (int) session.getCurrentKwh(),
@@ -639,6 +649,8 @@ public class OwnerDashboard {
                                     (int) session.getCurrentKwh() + " / "
                                             + (int) session.getTotalKwh() + " kWh")));
         } else {
+            // No charger telemetry exists. Show only what is actually known —
+            // reporting 0 kW and ₹0 would read as a fault rather than "unmeasured".
             statsCol.getChildren().addAll(
                     new HBox(24,
                             statItem("RUNNING FOR", session.elapsedLabel()),
@@ -675,6 +687,7 @@ public class OwnerDashboard {
         return card;
     }
 
+    /** Shows the support action as soon as the owner has an active booking. */
     private VBox buildBookedSession(Booking booking) {
         VBox card = new VBox(14);
         card.getStyleClass().add("active-session-card");

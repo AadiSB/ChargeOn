@@ -49,6 +49,7 @@ public class LiveMonitoring {
         AdminDashboard.goTo("Live Monitoring");
     }
 
+
     static ScrollPane buildMainContent() {
 
         VBox page = new VBox(16);
@@ -56,6 +57,7 @@ public class LiveMonitoring {
         page.setPadding(
                 new Insets(16)
         );
+
 
         VBox header = new VBox(4);
 
@@ -80,8 +82,10 @@ public class LiveMonitoring {
                 subtitle
         );
 
+
         HBox cityFilters =
                 buildCityFilters();
+
 
         HBox main =
                 new HBox(16);
@@ -121,8 +125,12 @@ dispatched.sort(
                         b.getCreatedAt()
                 )
 );
+        // ONE round-trip for every position, joined against the fleet in memory.
+        // Calling getLocationForBus per bus would be N REST calls.
         Map<String, BusLocation> positions = busLocationController.getAllBusLocations();
 
+        // "LIVE" now means "reporting a fresh position", not "not faulted" — the
+        // previous count was really just the non-fault bus count.
         int live = 0;
         for (Bus bus : buses) {
             BusLocation loc = positions.get(bus.getId());
@@ -199,6 +207,8 @@ dispatched.sort(
             String status = busController.getDisplayStatus(bus);
             String color = busController.getDisplayColor(status);
 
+            // Subtitle carries position freshness so an admin can see at a glance
+            // which buses are actually reporting.
             BusLocation loc = positions.get(bus.getId());
             String depot = bus.getDepot() == null ? "" : bus.getDepot();
             String subtitle = loc == null || !loc.hasCoordinates()
@@ -208,6 +218,7 @@ dispatched.sort(
             listRows.getChildren().add(busRow(bus.getBusCode(), subtitle, status, color));
         }
     }
+
 
     private static HBox buildCityFilters() {
 
@@ -228,6 +239,7 @@ dispatched.sort(
         return tabs;
     }
 
+
     private static Label filterTab(
             String city
     ) {
@@ -240,9 +252,11 @@ dispatched.sort(
                 city.equals(selectedCity)
         );
 
+
         tab.setOnMouseClicked(e -> {
 
             selectedCity = city;
+
 
             AdminDashboard.heading.setText(
                     "Live Monitoring"
@@ -288,6 +302,7 @@ dispatched.sort(
         return tab;
     }
 
+
     private static void updateFilterStyle(
             Label tab,
             boolean active
@@ -325,18 +340,26 @@ dispatched.sort(
         }
     }
 
+
+    /**
+     * Centre point for the fleet map when this city is selected. "All cities"
+     * frames Maharashtra as a whole; each named city uses its own centre so the
+     * toggle actually recentres the map instead of just relabeling it.
+     */
     private static double[] cityCenter(String city) {
         switch (city) {
             case "Pune":   return new double[] {18.5204, 73.8567};
             case "Mumbai": return new double[] {19.0760, 72.8777};
             case "Nagpur": return new double[] {21.1458, 79.0882};
-            default:       return new double[] {19.7515, 75.7139};
+            default:       return new double[] {19.7515, 75.7139}; // Maharashtra centre
         }
     }
 
+    /** Wide enough to show the whole state for "All cities"; street-level for a named city. */
     private static double cityZoom(String city) {
         return "All cities".equals(city) ? 6.3 : 12.0;
     }
+
 
     private static VBox buildMapCard(Label liveCountLabel, List<Bus> buses,
             Map<String, BusLocation> positions) {
@@ -351,6 +374,7 @@ dispatched.sort(
         card.setPadding(
                 new Insets(18)
         );
+
 
         HBox header =
                 new HBox();
@@ -388,6 +412,10 @@ dispatched.sort(
                 new HBox(liveCountLabel)
         );
 
+
+        // A marker per bus that has reported a position, coloured by the same
+        // display status the fleet list uses. Buses with no BusLocation document
+        // are simply absent — never plotted at 0,0.
         List<GluonMapPane.Marker> markers = new ArrayList<>();
 
         for (Bus bus : buses) {
@@ -404,6 +432,11 @@ dispatched.sort(
 
         int reporting = markers.size();
 
+        // The city toggle drives where the map looks, not where the buses happen to
+        // be: "All cities" frames the whole state, and picking a named city
+        // recentres and zooms the map on that city specifically. A highlighted
+        // marker pins the city's own centre point, so the toggle visibly does
+        // something even before any bus in that city has reported a position.
         double[] center = cityCenter(selectedCity);
         List<GluonMapPane.Marker> mapMarkers = new ArrayList<>(markers);
         mapMarkers.add(new GluonMapPane.Marker(center[0], center[1], "#facc15", true));
@@ -418,6 +451,7 @@ dispatched.sort(
                     mapMarkers).node();
         }
         mapArea.setPrefHeight(340);
+
 
         HBox legend =
                 new HBox(18,
@@ -461,6 +495,7 @@ dispatched.sort(
         return card;
     }
 
+
     private static HBox legendItem(
             String color,
             String text
@@ -485,6 +520,7 @@ dispatched.sort(
 
         return item;
     }
+
 
     private static VBox buildAssignCard(VBox holder) {
 
@@ -520,11 +556,16 @@ dispatched.sort(
         title.setStyle("-fx-text-fill:#f8fafc;-fx-font-size:18px;-fx-font-weight:bold;");
         holder.getChildren().add(title);
 
+        // Resolved once per render rather than per row — same pattern as
+        // populateDispatchList, just reused here for the driver names shown in the
+        // assign dialog's picker.
         Map<String, String> driverNameById = new HashMap<>();
         for (Driver driver : driverController.getAllDrivers()) {
             driverNameById.put(driver.getUid(), driver.getName());
         }
 
+        // Listed individually rather than summarised as "next", so an admin can act
+        // on any stuck booking instead of only the oldest one.
         for (com.core2web.model.Booking b : queued) {
             HBox row = new HBox(8);
             row.setAlignment(Pos.CENTER_LEFT);
@@ -550,6 +591,15 @@ dispatched.sort(
         }
     }
 
+
+    /**
+     * Dispatches a QUEUED booking to a driver, picked by their bus — bookings carry
+     * a busId, not a driverId directly, so "assign to driver" means "assign to the
+     * bus that driver is on" (same model {@code UsersAndDrivers}' reassign dialog
+     * uses). Only buses that currently have a driver are offered: assigning a
+     * driverless bus would flip the booking to ASSIGNED with an empty driverId,
+     * which would then show up in neither the queued nor the dispatched list.
+     */
     private static Button buildAssignButton(com.core2web.model.Booking b, List<Bus> buses,
             Map<String, String> driverNameById) {
 
@@ -647,6 +697,12 @@ dispatched.sort(
         return assign;
     }
 
+
+    /**
+     * Per-booking cancel for admins — the ops escape hatch for a booking that is
+     * stuck, e.g. an emergency request no driver ever answered. Disabled once the
+     * booking has finished or already been cancelled.
+     */
     private static Button buildCancelButton(com.core2web.model.Booking b) {
 
         Button cancel = new Button("Cancel");
@@ -695,10 +751,12 @@ dispatched.sort(
         return cancel;
     }
 
+
     private static boolean hasDriver(com.core2web.model.Booking booking) {
         String driverId = booking.getDriverId();
         return driverId != null && !driverId.isEmpty() && !"null".equals(driverId);
     }
+
 
     private static VBox buildDispatchCard(VBox rows, int count) {
 
@@ -724,6 +782,12 @@ dispatched.sort(
         return card;
     }
 
+
+    /**
+     * Shows who is actually on each dispatched booking. Booking.driverId and
+     * Booking.busId are raw ids, so they are resolved to the driver's name and the
+     * bus code; the id is only shown when the lookup finds nothing.
+     */
     private static void populateDispatchList(VBox rows,
             List<com.core2web.model.Booking> dispatched, List<Bus> buses) {
 
@@ -754,6 +818,7 @@ dispatched.sort(
         }
     }
 
+    /** Resolved label for an id, falling back to the raw id, then to a placeholder. */
     private static String displayName(Map<String, String> lookup, String id, String unknown) {
         if (id == null || id.isEmpty() || "null".equals(id)) {
             return unknown;
@@ -761,6 +826,7 @@ dispatched.sort(
         String name = lookup.get(id);
         return name == null || name.isEmpty() ? id : name;
     }
+
 
     private static HBox dispatchRow(com.core2web.model.Booking b, String driverName, String busCode) {
 
@@ -796,6 +862,7 @@ dispatched.sort(
 
         return row;
     }
+
 
     private static VBox buildBusListCard(Label fleetCountLabel, VBox rows) {
 
@@ -844,6 +911,7 @@ dispatched.sort(
 
         return card;
     }
+
 
     private static HBox busRow(
             String id,
@@ -915,6 +983,7 @@ dispatched.sort(
 
         return row;
     }
+
 
 }
 

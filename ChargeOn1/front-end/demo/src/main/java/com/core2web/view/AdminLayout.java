@@ -25,10 +25,66 @@ import com.core2web.model.Admin;
 
 public class AdminLayout {
 
+
     private static StackPane profileAvatar;
     private static Label profileInitials;
     private static ImageView profileImage;
     private static Label profileName;
+
+
+//     public static VBox buildSidebar(
+//             ListView<String> nav,
+//             Stage stage) {
+
+//         VBox sb =
+//                 new VBox(8);
+
+//         sb.getStyleClass().add(
+//                 "sidebar"
+//         );
+
+//         sb.setPrefWidth(
+//                 220
+//         );
+
+//         sb.setPadding(
+//                 new Insets(
+//                         16,
+//                         12,
+//                         16,
+//                         12
+//                 )
+//         );
+
+//         VBox.setVgrow(
+//                 nav,
+//                 Priority.ALWAYS
+//         );
+
+//         Button logoutBtn =
+//                 new Button(
+//                         "⏻  Log out"
+//                 );
+
+//         logoutBtn.getStyleClass().add(
+//                 "logout-btn"
+//         );
+
+//         logoutBtn.setMaxWidth(
+//                 Double.MAX_VALUE
+//         );
+
+//         logoutBtn.setOnAction(
+//                 e -> LoginPage.showLoginPage(stage)
+//         );
+
+//         sb.getChildren().addAll(
+//                 nav,
+//                 logoutBtn
+//         );
+
+//         return sb;
+//     }
 
 public static VBox buildSidebar(
         ListView<String> nav,
@@ -59,6 +115,11 @@ public static VBox buildSidebar(
             Priority.ALWAYS
     );
 
+
+    // ============================================================
+    // ABOUT US BUTTON
+    // ============================================================
+
     Button aboutUsBtn =
             new Button(
                     "About Us"
@@ -76,9 +137,15 @@ public static VBox buildSidebar(
             42
     );
 
+
     aboutUsBtn.setOnAction(
             e -> AdminDashboard.goTo("About Us")
     );
+
+
+    // ============================================================
+    // LOGOUT BUTTON
+    // ============================================================
 
     Button logoutBtn =
             new Button(
@@ -96,6 +163,11 @@ public static VBox buildSidebar(
     logoutBtn.setOnAction(
             e -> LoginPage.showLoginPage(stage)
     );
+
+
+    // ============================================================
+    // SIDEBAR
+    // ============================================================
 
     sb.getChildren().addAll(
             nav,
@@ -129,6 +201,7 @@ public static VBox buildSidebar(
         bar.setAlignment(
                 Pos.CENTER_LEFT
         );
+
 
         HBox logoRow =
                 new HBox(6);
@@ -198,6 +271,7 @@ public static VBox buildSidebar(
                 Pos.CENTER_LEFT
         );
 
+
         VBox left =
                 new VBox(2);
 
@@ -205,6 +279,7 @@ public static VBox buildSidebar(
                 heading,
                 subheading
         );
+
 
         TextField search =
                 new TextField();
@@ -221,6 +296,7 @@ public static VBox buildSidebar(
                 300
         );
 
+
         Region spacer =
                 new Region();
 
@@ -228,6 +304,7 @@ public static VBox buildSidebar(
                 spacer,
                 Priority.ALWAYS
         );
+
 
         BusController.FleetStatusCounts fleet = new BusController().getFleetStatusCounts();
         HBox statusPill =
@@ -250,6 +327,7 @@ public static VBox buildSidebar(
         statusPill.getStyleClass().add(
                 "gps-pill"
         );
+
 
         StackPane bell =
                 new StackPane();
@@ -291,6 +369,7 @@ public static VBox buildSidebar(
                 bell,
                 new Tooltip("Notifications")
         );
+
 
         profileAvatar =
                 new StackPane();
@@ -357,6 +436,11 @@ public static VBox buildSidebar(
                         + "-fx-font-weight:bold;"
         );
 
+        /*
+         * Reserve room for the signed-in user's name.  Long names are
+         * shortened instead of allowing the account controls to push the
+         * notification bell outside the header.
+         */
         profileName.setMinWidth(
                 100
         );
@@ -373,9 +457,11 @@ public static VBox buildSidebar(
                 OverrunStyle.ELLIPSIS
         );
 
+
         loadAdminProfile(
                 avatarCircle
         );
+
 
         profileAvatar.setOnMouseClicked(
                 e -> AdminDashboard.openProfile()
@@ -384,6 +470,7 @@ public static VBox buildSidebar(
         profileName.setOnMouseClicked(
                 e -> AdminDashboard.openProfile()
         );
+
 
         HBox right =
                 new HBox(
@@ -406,6 +493,7 @@ public static VBox buildSidebar(
                 200
         );
 
+
         bar.getChildren().addAll(
                 brand,
                 left,
@@ -414,6 +502,11 @@ public static VBox buildSidebar(
                 right
         );
 
+        /*
+         * The account controls are present on every admin page.  On smaller
+         * windows, progressively hide lower-priority header content so the
+         * bell and administrator name always retain their space.
+         */
         bar.widthProperty().addListener(
                 (observable, oldWidth, newWidth) ->
                         updateTopBarVisibility(
@@ -427,6 +520,7 @@ public static VBox buildSidebar(
 
         return bar;
     }
+
 
     private static void updateTopBarVisibility(
             double width,
@@ -460,6 +554,7 @@ public static VBox buildSidebar(
         );
     }
 
+
     private static void setHeaderElementVisible(
             javafx.scene.Node element,
             boolean visible) {
@@ -472,6 +567,7 @@ public static VBox buildSidebar(
                 visible
         );
     }
+
 
     private static void loadAdminProfile(
             Circle avatarCircle) {
@@ -489,6 +585,7 @@ public static VBox buildSidebar(
                 return;
             }
 
+
             if (admin.getName() != null
                     && !admin.getName().trim().isEmpty()) {
 
@@ -504,8 +601,10 @@ public static VBox buildSidebar(
                 );
             }
 
+
             String imageUrl =
                     admin.getProfileImageUrl();
+
 
             if (imageUrl == null
                     || imageUrl.trim().isEmpty()) {
@@ -539,6 +638,7 @@ public static VBox buildSidebar(
             e.printStackTrace();
         }
     }
+
 
     private static void loadProfileImage(
             String imageUrl,
@@ -615,6 +715,7 @@ public static VBox buildSidebar(
         }
     }
 
+
     public static void refreshAdminProfile() {
 
         if (profileAvatar == null
@@ -648,6 +749,7 @@ public static VBox buildSidebar(
         );
     }
 
+
     private static String getInitials(
             String fullName) {
 
@@ -678,6 +780,7 @@ public static VBox buildSidebar(
         ).toUpperCase();
     }
 
+
     public static VBox card(
             String title) {
 
@@ -701,6 +804,7 @@ public static VBox buildSidebar(
 
         return c;
     }
+
 
     public static VBox statCard(
             String title,
@@ -741,6 +845,7 @@ public static VBox buildSidebar(
 
         return c;
     }
+
 
     public static HBox statusBadge(
             String text,
@@ -783,6 +888,7 @@ public static VBox buildSidebar(
 
         return box;
     }
+
 
     public static HBox alertBanner(
             String icon,
@@ -865,6 +971,7 @@ public static VBox buildSidebar(
         return banner;
     }
 
+
     public static Label colLabel(
             String text,
             double width) {
@@ -892,6 +999,7 @@ public static VBox buildSidebar(
 
         return l;
     }
+
 
     public static Label label(
             String text,

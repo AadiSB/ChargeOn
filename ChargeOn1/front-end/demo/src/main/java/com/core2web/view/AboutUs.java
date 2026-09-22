@@ -14,8 +14,18 @@ import java.io.InputStream;
 
 public class AboutUs {
 
+    // ============================================================
+    // ONLY IMAGE USED ON THIS PAGE
+    // Replace this with your actual Shashi Sir image path
+    // ============================================================
+
     private static final String SHASHI_SIR_IMAGE =
             "/assets/images/shashi_sir.png";
+
+
+    // ============================================================
+    // MAIN CONTENT
+    // ============================================================
 
     public static ScrollPane buildMainContent() {
 
@@ -31,6 +41,11 @@ public class AboutUs {
                 "about-us-root"
         );
 
+
+        // ========================================================
+        // PAGE HEADER
+        // ========================================================
+
         VBox header = new VBox(8);
 
         Label title =
@@ -39,6 +54,7 @@ public class AboutUs {
         title.getStyleClass().add(
                 "heading"
         );
+
 
         Label subtitle =
                 new Label(
@@ -53,13 +69,20 @@ public class AboutUs {
                 "-fx-font-size: 15px;"
         );
 
+
         header.getChildren().addAll(
                 title,
                 subtitle
         );
 
+
+        // ========================================================
+        // 1. PROJECT DESCRIPTION
+        // ========================================================
+
         VBox projectSection =
                 new VBox(13);
+
 
         Label projectTitle =
                 new Label("Project Description");
@@ -67,6 +90,7 @@ public class AboutUs {
         projectTitle.getStyleClass().add(
                 "section-title"
         );
+
 
         VBox projectCard =
                 new VBox(12);
@@ -78,6 +102,7 @@ public class AboutUs {
         projectCard.getStyleClass().add(
                 "about-card"
         );
+
 
         Label projectDescription =
                 new Label(
@@ -101,17 +126,25 @@ public class AboutUs {
                 "-fx-font-size: 16px;"
         );
 
+
         projectCard.getChildren().add(
                 projectDescription
         );
+
 
         projectSection.getChildren().addAll(
                 projectTitle,
                 projectCard
         );
 
+
+        // ========================================================
+        // 2. OUR TEAM
+        // ========================================================
+
         VBox teamSection =
                 new VBox(13);
+
 
         Label teamTitle =
                 new Label("Our Team");
@@ -119,6 +152,7 @@ public class AboutUs {
         teamTitle.getStyleClass().add(
                 "section-title"
         );
+
 
         Label teamSubtitle =
                 new Label(
@@ -131,6 +165,7 @@ public class AboutUs {
                 "-fx-font-size: 15px;"
         );
 
+
         FlowPane teamCards =
                 new FlowPane();
 
@@ -139,6 +174,11 @@ public class AboutUs {
         teamCards.setVgap(18);
 
         teamCards.setPrefWrapLength(950);
+
+
+        // --------------------------------------------------------
+        // AADITYA BHAND
+        // --------------------------------------------------------
 
         teamCards.getChildren().add(
                 createTeamCard(
@@ -149,6 +189,11 @@ public class AboutUs {
                 )
         );
 
+
+        // --------------------------------------------------------
+        // ANUJ SHINDE
+        // --------------------------------------------------------
+
         teamCards.getChildren().add(
                 createTeamCard(
                         "Anuj Shinde",
@@ -157,6 +202,11 @@ public class AboutUs {
                         + "implementation of the ChargeOn platform."
                 )
         );
+
+
+        // --------------------------------------------------------
+        // PRANAV NAGUR
+        // --------------------------------------------------------
 
         teamCards.getChildren().add(
                 createTeamCard(
@@ -167,6 +217,11 @@ public class AboutUs {
                 )
         );
 
+
+        // --------------------------------------------------------
+        // DHRUVA SATPUTE
+        // --------------------------------------------------------
+
         teamCards.getChildren().add(
                 createTeamCard(
                         "Dhruva Satpute",
@@ -176,14 +231,21 @@ public class AboutUs {
                 )
         );
 
+
         teamSection.getChildren().addAll(
                 teamTitle,
                 teamSubtitle,
                 teamCards
         );
 
+
+        // ========================================================
+        // 3. ACKNOWLEDGEMENTS
+        // ========================================================
+
         VBox acknowledgementSection =
                 new VBox(13);
+
 
         Label acknowledgementTitle =
                 new Label("Acknowledgements");
@@ -191,6 +253,7 @@ public class AboutUs {
         acknowledgementTitle.getStyleClass().add(
                 "section-title"
         );
+
 
         VBox acknowledgementCard =
                 new VBox(12);
@@ -202,6 +265,7 @@ public class AboutUs {
         acknowledgementCard.getStyleClass().add(
                 "about-card"
         );
+
 
         Label acknowledgementText =
                 new Label(
@@ -220,17 +284,25 @@ public class AboutUs {
                 "-fx-font-size: 16px;"
         );
 
+
         acknowledgementCard.getChildren().add(
                 acknowledgementText
         );
+
 
         acknowledgementSection.getChildren().addAll(
                 acknowledgementTitle,
                 acknowledgementCard
         );
 
+
+        // ========================================================
+        // 4. SPECIAL THANKS
+        // ========================================================
+
         VBox specialThanksSection =
                 new VBox(13);
+
 
         Label specialThanksTitle =
                 new Label("Special Thanks");
@@ -239,16 +311,24 @@ public class AboutUs {
                 "section-title"
         );
 
+
         HBox shashiCard =
                 createSpecialThanksCard();
+
 
         specialThanksSection.getChildren().addAll(
                 specialThanksTitle,
                 shashiCard
         );
 
+
+        // ========================================================
+        // 5. INSTRUCTORS
+        // ========================================================
+
         VBox instructorsSection =
                 new VBox(13);
+
 
         Label instructorsTitle =
                 new Label("Instructors");
@@ -256,6 +336,7 @@ public class AboutUs {
         instructorsTitle.getStyleClass().add(
                 "section-title"
         );
+
 
         Label instructorsSubtitle =
                 new Label(
@@ -268,6 +349,7 @@ public class AboutUs {
                 "-fx-font-size: 15px;"
         );
 
+
         FlowPane instructors =
                 new FlowPane();
 
@@ -276,6 +358,7 @@ public class AboutUs {
         instructors.setVgap(18);
 
         instructors.setPrefWrapLength(950);
+
 
         instructors.getChildren().addAll(
 
@@ -301,14 +384,21 @@ public class AboutUs {
                 )
         );
 
+
         instructorsSection.getChildren().addAll(
                 instructorsTitle,
                 instructorsSubtitle,
                 instructors
         );
 
+
+        // ========================================================
+        // 6. SUPER MENTORS
+        // ========================================================
+
         VBox superMentorsSection =
                 new VBox(13);
+
 
         Label superMentorsTitle =
                 new Label("Super Mentors");
@@ -316,6 +406,7 @@ public class AboutUs {
         superMentorsTitle.getStyleClass().add(
                 "section-title"
         );
+
 
         Label superMentorsSubtitle =
                 new Label(
@@ -328,6 +419,7 @@ public class AboutUs {
                 "-fx-font-size: 15px;"
         );
 
+
         FlowPane superMentors =
                 new FlowPane();
 
@@ -336,6 +428,7 @@ public class AboutUs {
         superMentors.setVgap(18);
 
         superMentors.setPrefWrapLength(950);
+
 
         superMentors.getChildren().addAll(
 
@@ -354,14 +447,21 @@ public class AboutUs {
                 )
         );
 
+
         superMentorsSection.getChildren().addAll(
                 superMentorsTitle,
                 superMentorsSubtitle,
                 superMentors
         );
 
+
+        // ========================================================
+        // 7. MENTORS & TEAM
+        // ========================================================
+
         VBox mentorsTeamSection =
                 new VBox(13);
+
 
         Label mentorsTeamTitle =
                 new Label("Mentors & Team");
@@ -369,6 +469,7 @@ public class AboutUs {
         mentorsTeamTitle.getStyleClass().add(
                 "section-title"
         );
+
 
         Label mentorsTeamSubtitle =
                 new Label(
@@ -381,6 +482,7 @@ public class AboutUs {
                 "-fx-font-size: 15px;"
         );
 
+
         FlowPane mentorsTeam =
                 new FlowPane();
 
@@ -389,6 +491,7 @@ public class AboutUs {
         mentorsTeam.setVgap(18);
 
         mentorsTeam.setPrefWrapLength(950);
+
 
         mentorsTeam.getChildren().addAll(
 
@@ -407,30 +510,48 @@ public class AboutUs {
                 )
         );
 
+
         mentorsTeamSection.getChildren().addAll(
                 mentorsTeamTitle,
                 mentorsTeamSubtitle,
                 mentorsTeam
         );
 
+
+        // ========================================================
+        // FINAL PAGE ORDER
+        // ========================================================
+
         root.getChildren().addAll(
 
                 header,
 
+                // 1
                 projectSection,
 
+                // 2
                 teamSection,
 
+                // 3
                 acknowledgementSection,
 
+                // 4
                 specialThanksSection,
 
+                // 5
                 instructorsSection,
 
+                // 6
                 superMentorsSection,
 
+                // 7
                 mentorsTeamSection
         );
+
+
+        // ========================================================
+        // SCROLL PANE
+        // ========================================================
 
         ScrollPane scrollPane =
                 new ScrollPane(root);
@@ -449,8 +570,14 @@ public class AboutUs {
                 "scroll-pane"
         );
 
+
         return scrollPane;
     }
+
+
+    // ============================================================
+    // TEAM MEMBER CARD
+    // ============================================================
 
     private static VBox createTeamCard(
             String name,
@@ -479,6 +606,11 @@ public class AboutUs {
                 "team-card"
         );
 
+
+        // --------------------------------------------------------
+        // NAME
+        // --------------------------------------------------------
+
         Label nameLabel =
                 new Label(name);
 
@@ -490,6 +622,11 @@ public class AboutUs {
                 "-fx-font-weight: bold;"
         );
 
+
+        // --------------------------------------------------------
+        // ROLE
+        // --------------------------------------------------------
+
         Label roleLabel =
                 new Label(role);
 
@@ -500,6 +637,11 @@ public class AboutUs {
                 "-fx-font-size: 17px;" +
                 "-fx-font-weight: bold;"
         );
+
+
+        // --------------------------------------------------------
+        // DESCRIPTION
+        // --------------------------------------------------------
 
         Label descriptionLabel =
                 new Label(description);
@@ -513,14 +655,21 @@ public class AboutUs {
                 "-fx-font-size: 16px;"
         );
 
+
         card.getChildren().addAll(
                 nameLabel,
                 roleLabel,
                 descriptionLabel
         );
 
+
         return card;
     }
+
+
+    // ============================================================
+    // NORMAL INFORMATION CARD
+    // ============================================================
 
     private static VBox createInfoCard(
             String name,
@@ -549,6 +698,11 @@ public class AboutUs {
                 "person-card"
         );
 
+
+        // --------------------------------------------------------
+        // NAME
+        // --------------------------------------------------------
+
         Label nameLabel =
                 new Label(name);
 
@@ -560,6 +714,11 @@ public class AboutUs {
                 "-fx-font-weight: bold;"
         );
 
+
+        // --------------------------------------------------------
+        // ROLE
+        // --------------------------------------------------------
+
         Label roleLabel =
                 new Label(role);
 
@@ -570,6 +729,11 @@ public class AboutUs {
                 "-fx-font-size: 17px;" +
                 "-fx-font-weight: bold;"
         );
+
+
+        // --------------------------------------------------------
+        // DESCRIPTION
+        // --------------------------------------------------------
 
         Label descriptionLabel =
                 new Label(description);
@@ -583,14 +747,21 @@ public class AboutUs {
                 "-fx-font-size: 16px;"
         );
 
+
         card.getChildren().addAll(
                 nameLabel,
                 roleLabel,
                 descriptionLabel
         );
 
+
         return card;
     }
+
+
+    // ============================================================
+    // SHASHI SIR SPECIAL THANKS CARD
+    // ============================================================
 
     private static HBox createSpecialThanksCard() {
 
@@ -613,11 +784,21 @@ public class AboutUs {
                 "special-thanks-card"
         );
 
+
+        // ========================================================
+        // ONLY IMAGE ON THE ENTIRE ABOUT US PAGE
+        // ========================================================
+
         ImageView imageView =
                 createCircularImage(
                         SHASHI_SIR_IMAGE,
                         250
                 );
+
+
+        // ========================================================
+        // INFORMATION
+        // ========================================================
 
         VBox information =
                 new VBox(8);
@@ -625,6 +806,11 @@ public class AboutUs {
         information.setAlignment(
                 Pos.CENTER_LEFT
         );
+
+
+        // ========================================================
+        // WITH GRATITUDE
+        // ========================================================
 
         Label gratitudeLabel =
                 new Label("With Gratitude");
@@ -635,6 +821,11 @@ public class AboutUs {
                 "-fx-font-weight: bold;"
         );
 
+
+        // ========================================================
+        // SHASHI SIR
+        // ========================================================
+
         Label nameLabel =
                 new Label("Shashi Sir");
 
@@ -644,6 +835,11 @@ public class AboutUs {
                 "-fx-font-weight: bold;"
         );
 
+
+        // ========================================================
+        // CORE2WEB
+        // ========================================================
+
         Label organizationLabel =
                 new Label("Core2Web");
 
@@ -652,6 +848,11 @@ public class AboutUs {
                 "-fx-font-size: 48px;" +
                 "-fx-font-weight: bold;"
         );
+
+
+        // ========================================================
+        // DESCRIPTION
+        // ========================================================
 
         Label description =
                 new Label(
@@ -672,6 +873,7 @@ public class AboutUs {
                 "-fx-font-size: 16px;"
         );
 
+
         information.getChildren().addAll(
                 gratitudeLabel,
                 nameLabel,
@@ -679,18 +881,26 @@ public class AboutUs {
                 description
         );
 
+
         card.getChildren().addAll(
                 imageView,
                 information
         );
+
 
         HBox.setHgrow(
                 information,
                 Priority.ALWAYS
         );
 
+
         return card;
     }
+
+
+    // ============================================================
+    // CIRCULAR IMAGE
+    // ============================================================
 
     private static ImageView createCircularImage(
             String imagePath,
@@ -699,6 +909,7 @@ public class AboutUs {
 
         ImageView imageView =
                 new ImageView();
+
 
         imageView.setFitWidth(
                 size
@@ -712,6 +923,7 @@ public class AboutUs {
                 false
         );
 
+
         try {
 
             InputStream inputStream =
@@ -719,14 +931,17 @@ public class AboutUs {
                             imagePath
                     );
 
+
             if (inputStream != null) {
 
                 Image image =
                         new Image(inputStream);
 
+
                 imageView.setImage(
                         image
                 );
+
 
                 Circle clip =
                         new Circle(
@@ -734,6 +949,7 @@ public class AboutUs {
                                 size / 2,
                                 size / 2
                         );
+
 
                 imageView.setClip(
                         clip
@@ -747,6 +963,7 @@ public class AboutUs {
                 );
             }
 
+
         } catch (Exception e) {
 
             createPlaceholder(
@@ -755,8 +972,14 @@ public class AboutUs {
             );
         }
 
+
         return imageView;
     }
+
+
+    // ============================================================
+    // PLACEHOLDER IF SHASHI SIR IMAGE IS NOT FOUND
+    // ============================================================
 
     private static void createPlaceholder(
             ImageView imageView,
@@ -770,9 +993,11 @@ public class AboutUs {
                         size / 2
                 );
 
+
         placeholder.setFill(
                 Color.web("#202936")
         );
+
 
         imageView.setClip(
                 placeholder

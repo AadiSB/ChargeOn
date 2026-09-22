@@ -18,6 +18,7 @@ public class BookingDao {
 
     private static final String COLLECTION = "bookings";
 
+
     public List<Booking> getAllBookings(String idToken) {
 
         List<JSONObject> docs =
@@ -29,6 +30,15 @@ public class BookingDao {
         return toDomainList(docs);
     }
 
+
+    /**
+     * Existing assignment method preserved for backward compatibility.
+     *
+     * Normal/legacy callers continue to create an ASSIGNED booking.
+     *
+     * Emergency callers should use the overload that explicitly supplies
+     * isEmergency so the driver receives the pending-accept state.
+     */
     public boolean assignBus(
             String bookingId,
             String busId,
@@ -44,6 +54,22 @@ public class BookingDao {
         );
     }
 
+
+    /**
+     * Assigns the ADMIN-selected bus and its permanently assigned driver
+     * to a booking.
+     *
+     * Normal bookings:
+     *
+     *     ASSIGNED
+     *
+     * Emergency bookings:
+     *
+     *     PENDING_DRIVER_ACCEPT
+     *
+     * The emergency state is important because Driver-side emergency
+     * handling looks specifically for STATUS_PENDING_DRIVER_ACCEPT.
+     */
     public boolean assignBus(
             String bookingId,
             String busId,
@@ -78,6 +104,7 @@ public class BookingDao {
         );
     }
 
+
     public List<Booking> getBookingsForOwner(
             String uid,
             String idToken) {
@@ -97,6 +124,7 @@ public class BookingDao {
 
         return toDomainList(docs);
     }
+
 
     public Booking getUpcomingBooking(
             String uid,
@@ -130,6 +158,7 @@ public class BookingDao {
 
         return upcoming;
     }
+
 
     public List<Booking> getBookingsThisMonth(
             String uid,
@@ -174,6 +203,7 @@ public class BookingDao {
         return toDomainList(docs);
     }
 
+
     public List<Booking> getBookingsToday(
             String idToken) {
 
@@ -208,6 +238,10 @@ public class BookingDao {
         return toDomainList(docs);
     }
 
+
+    /**
+     * Bookings stamped with this driver.
+     */
     public List<Booking> getBookingsForDriver(
             String driverId,
             String idToken) {
@@ -227,6 +261,7 @@ public class BookingDao {
 
         return toDomainList(docs);
     }
+
 
     public List<Booking> getBookingsForBus(
             String busId,
@@ -248,10 +283,18 @@ public class BookingDao {
         return toDomainList(docs);
     }
 
+
     public String createBooking(
             Booking booking,
             String idToken) {
 
+        /*
+         * LinkedHashMap is used because:
+         *
+         * 1. driverId can be empty
+         * 2. FirestoreHelper already handles these fields
+         * 3. There are more than ten fields
+         */
         Map<String, Object> fields =
                 new LinkedHashMap<>();
 
@@ -307,11 +350,22 @@ public class BookingDao {
                 booking.isEmergency()
         );
 
+        /*
+         * Store the actual owner-selected booking mode.
+         *
+         * instant
+         * reserve
+         * emergency
+         */
         fields.put(
                 "bookingType",
                 booking.getBookingType()
         );
 
+        /*
+         * Two separate doubles.
+         * Never use a GeoPoint here.
+         */
         fields.put(
                 "pickupLatitude",
                 booking.getPickupLatitude()
@@ -322,11 +376,17 @@ public class BookingDao {
                 booking.getPickupLongitude()
         );
 
+        /*
+         * OTP verification starts empty.
+         */
         fields.put(
                 "otpVerifiedAt",
                 ""
         );
 
+        /*
+         * Fare frozen at booking time.
+         */
         fields.put(
                 "amount",
                 booking.getAmount()
@@ -349,6 +409,7 @@ public class BookingDao {
         );
     }
 
+
     public boolean updateStatus(
             String bookingId,
             String newStatus,
@@ -368,6 +429,11 @@ public class BookingDao {
         );
     }
 
+
+    /**
+     * Submits the driver's OTP and, when accepted by Firestore rules,
+     * moves the booking to CHARGING.
+     */
     public boolean startChargingWithOtp(
             String bookingId,
             String otpAttempt,
@@ -401,6 +467,12 @@ public class BookingDao {
         );
     }
 
+
+    /**
+     * Undoes an emergency dispatch.
+     *
+     * The booking becomes available in the ADMIN dispatch queue again.
+     */
     public boolean clearEmergencyDispatch(
             String bookingId,
             String idToken) {
@@ -422,6 +494,7 @@ public class BookingDao {
         );
     }
 
+
     public Booking getBooking(
             String bookingId,
             String idToken) {
@@ -437,6 +510,7 @@ public class BookingDao {
                 ? null
                 : fromDocument(doc);
     }
+
 
     private List<Booking> toDomainList(
             List<JSONObject> docs) {
@@ -462,6 +536,7 @@ public class BookingDao {
         return list;
     }
 
+
     private static int compareTimestamps(
             String left,
             String right) {
@@ -482,6 +557,7 @@ public class BookingDao {
                 ? 1
                 : a.compareTo(b);
     }
+
 
     private Booking fromDocument(
             JSONObject doc) {
@@ -565,6 +641,12 @@ public class BookingDao {
                 )
         );
 
+        /*
+         * Read bookingType.
+         *
+         * Old Firestore bookings will not have this field.
+         * Therefore fall back to the old isEmergency field.
+         */
         String bookingType =
                 FirestoreHelper.getString(
                         doc,

@@ -40,10 +40,12 @@ public class Booking {
 
     private static final class BookingState {
         List<com.core2web.model.Booking> bookings = new ArrayList<>();
+        /** ownerId -> display name, resolved once per load. */
         Map<String, String> ownerNames = new HashMap<>();
         String filter = "All";
     }
 
+    /** Collects the distinct requesters on these bookings and resolves their names. */
     private static Map<String, String> resolveOwnerNames(
             List<com.core2web.model.Booking> bookings) {
         List<String> ids = new ArrayList<>();
@@ -68,6 +70,7 @@ public class Booking {
         VBox leftCol = new VBox(14);
         HBox.setHgrow(leftCol, Priority.ALWAYS);
 
+        // Only added when a real pending emergency exists — no placeholder banner.
         HBox emergencyBanner = buildEmergencyBanner();
         if (emergencyBanner != null) {
             leftCol.getChildren().add(emergencyBanner);
@@ -89,6 +92,7 @@ public class Booking {
         return scrollPane;
     }
 
+
     private static void refresh(BookingState state, VBox rows, VBox assignmentHolder) {
         populateBookingRow(rows, state);
 
@@ -106,6 +110,10 @@ public class Booking {
                         : buildNewAssignmentPlaceholder("No new assignment right now."));
     }
 
+    /**
+     * The emergency diversion banner, or null when this driver has no pending
+     * emergency — callers must skip adding it entirely in that case.
+     */
     private HBox buildEmergencyBanner() {
         com.core2web.model.Booking pending =
                 bookingController.getPendingEmergencyBookingForCurrentDriver();
@@ -173,11 +181,14 @@ public class Booking {
         VBox idBox = new VBox(2);
         idBox.setPrefWidth(120);
         idBox.setMinWidth(120);
+        // Short reference so it fits on one line; the full document ID is on the
+        // tooltip, since only that can be looked up in Firestore.
         Label idLabel = new Label(b.shortRef());
         idLabel.setStyle("-fx-text-fill:#f8fafc;-fx-font-size:12px;-fx-font-weight:bold;");
         idLabel.setTooltip(new Tooltip("Booking ID: " + b.getId()));
         idBox.getChildren().add(idLabel);
 
+        // Who to expect at the pickup — lets the driver confirm the right customer.
         Label requesterLabel = new Label(
                 OwnerController.nameOr(ownerNames, b.getOwnerId(), "unknown requester"));
         requesterLabel.setStyle("-fx-text-fill:#94a3b8;-fx-font-size:11px;");
@@ -201,6 +212,7 @@ public class Booking {
         energyLabel.setPrefWidth(70);
         energyLabel.setMinWidth(70);
 
+        // Locked: this one is answered via the emergency banner, not from here.
         Label statusBadge = new Label(
                 b.isPendingDriverAccept() ? "🔒 AWAITING YOU" : b.getStatus());
         String statusColor = b.statusColor();
@@ -235,6 +247,8 @@ public class Booking {
     private static void populateBookingRow(VBox rows, BookingState state) {
         rows.getChildren().clear();
         for (com.core2web.model.Booking b : state.bookings) {
+            // A pending emergency is answered through the banner, not this list, so
+            // it never counts as Active work the driver can start or complete.
             boolean activeWork = !b.isCompleted()
                     && !"CANCELLED".equals(b.getStatus())
                     && !b.isPendingDriverAccept();

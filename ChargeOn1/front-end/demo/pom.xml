@@ -11,6 +11,9 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <!-- Must match the JavaFX SDK on the module path in .vscode/launch.json,
+             currently 21.0.12. The SDK wins at runtime, so a mismatch here means
+             compiling against a different build than the one you actually run. -->
         <javafx.version>21.0.12</javafx.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -31,11 +34,16 @@
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <!-- No javafx-web here on purpose: no WebView, no HTML, no tile math.
+             Gluon Maps handles OpenStreetMap tiles, pan and zoom natively. -->
         <dependency>
             <groupId>com.gluonhq</groupId>
             <artifactId>maps</artifactId>
             <version>2.0.0-ea+6</version>
 
+            <!-- REQUIRED. Gluon Maps 2.0.0-ea+6 declares JavaFX 16 transitively;
+                 this project runs 21.x. Without these exclusions both versions
+                 land on the path and you get runtime conflicts. -->
             <exclusions>
 
                 <exclusion>
@@ -66,12 +74,21 @@
             <version>2.3.2</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-admin -->
         <dependency>
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
             <version>9.2.0</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-core -->
+        <!-- Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-core -->
+        <!-- <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-core</artifactId>
+            <version>21.1.1</version>
+            <scope>compile</scope>
+        </dependency> -->
     </dependencies>
 
 </project>

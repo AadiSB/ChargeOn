@@ -16,7 +16,18 @@ public class NotificationDao {
 
     private static final String COLLECTION = "notifications";
 
+    /*
+     * Kept as a separate constant for compatibility with the existing
+     * owner-driver notification flow.
+     *
+     * It intentionally points to the same Firestore collection.
+     */
     private static final String OWNER_DRIVER_COLLECTION = "notifications";
+
+
+    // ============================================================
+    // GET NOTIFICATIONS FOR CURRENT USER
+    // ============================================================
 
     public List<Notification> getNotificationsForUser(
             String uid,
@@ -46,6 +57,11 @@ public class NotificationDao {
         return toList(docs);
     }
 
+
+    // ============================================================
+    // ADMIN BROADCAST NOTIFICATIONS
+    // ============================================================
+
     public List<Notification> getAdminBroadcastNotifications(
             String adminIdToken) {
 
@@ -71,6 +87,33 @@ public class NotificationDao {
         return toList(docs);
     }
 
+
+    // ============================================================
+    // OWNER DRIVER NOTIFICATIONS
+    // ============================================================
+
+    /**
+     * Returns notifications belonging to the logged-in owner.
+     *
+     * IMPORTANT:
+     *
+     * The owner is identified using the Firebase Auth UID stored
+     * in the notification's "userId" field.
+     *
+     * We intentionally do NOT filter notification types here.
+     *
+     * This allows the owner to receive:
+     *
+     *     bus_assigned
+     *     driver_booking_accepted
+     *     driver_response
+     *     charging_started
+     *     charging_completed
+     *     and any future owner notification types.
+     *
+     * The actual notification type is still displayed by the
+     * existing OwnerNotifications UI.
+     */
     public List<Notification> getOwnerDriverNotifications(
             String ownerId,
             String idToken) {
@@ -96,8 +139,18 @@ public class NotificationDao {
                         idToken
                 );
 
+        /*
+         * Do NOT filter by notification type here.
+         *
+         * The userId is the ownership boundary.
+         */
         return toList(docs);
     }
+
+
+    // ============================================================
+    // CREATE NORMAL USER NOTIFICATION
+    // ============================================================
 
     public boolean notifyUser(
             String userId,
@@ -139,6 +192,11 @@ public class NotificationDao {
         );
     }
 
+
+    // ============================================================
+    // CREATE ADMIN BROADCAST NOTIFICATION
+    // ============================================================
+
     public boolean notifyAdmins(
             String type,
             String message,
@@ -163,6 +221,9 @@ public class NotificationDao {
                 "admin_broadcast"
         );
 
+        /*
+         * Admin broadcasts intentionally have no individual userId.
+         */
         fields.put(
                 "userId",
                 ""
@@ -176,6 +237,17 @@ public class NotificationDao {
         );
     }
 
+
+    // ============================================================
+    // CREATE OWNER DRIVER UPDATE NOTIFICATION
+    // ============================================================
+
+    /**
+     * Creates a notification specifically for an owner when a
+     * driver/bus/booking event occurs.
+     *
+     * The owner's Firebase Auth UID is stored in "userId".
+     */
     public boolean notifyOwnerOfDriverUpdate(
             String ownerId,
             String type,
@@ -203,6 +275,11 @@ public class NotificationDao {
                 "owner_driver_update"
         );
 
+        /*
+         * CRITICAL:
+         *
+         * This MUST be the Firebase Auth UID of the owner.
+         */
         fields.put(
                 "userId",
                 ownerId
@@ -215,6 +292,11 @@ public class NotificationDao {
                 idToken
         );
     }
+
+
+    // ============================================================
+    // COMMON NOTIFICATION FIELDS
+    // ============================================================
 
     private Map<String, Object> baseFields(
             String type,
@@ -245,6 +327,10 @@ public class NotificationDao {
                         : linkedEntityId
         );
 
+        /*
+         * FirestoreHelper already converts createdAt into a
+         * Firestore timestamp because the field ends with "At".
+         */
         fields.put(
                 "createdAt",
                 Instant.now().toString()
@@ -253,9 +339,19 @@ public class NotificationDao {
         return fields;
     }
 
+
+    // ============================================================
+    // AUTO ID
+    // ============================================================
+
     private String autoId() {
         return UUID.randomUUID().toString();
     }
+
+
+    // ============================================================
+    // FIRESTORE -> NOTIFICATION MODEL
+    // ============================================================
 
     private List<Notification> toList(
             List<JSONObject> docs) {

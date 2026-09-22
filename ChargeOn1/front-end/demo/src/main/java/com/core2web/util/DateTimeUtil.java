@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+/** Single timezone-safe boundary between Firestore timestamps and JavaFX text. */
 public final class DateTimeUtil {
     public static final ZoneId INDIA = ZoneId.of("Asia/Kolkata");
     public static final DateTimeFormatter DISPLAY = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
@@ -22,6 +23,7 @@ public final class DateTimeUtil {
 
     private DateTimeUtil() { }
 
+    /** Parses new timestamp values and supported legacy values; never invents a time. */
     public static Instant parse(String value) {
         if (value == null || value.isBlank()) return null;
         String text = value.trim();

@@ -1,3 +1,4 @@
+
 package com.core2web.view;
 
 import java.util.List;
@@ -42,10 +43,28 @@ public class AdminDashboard {
     static Label subheading;
     static StackPane middleBox;
 
+    /*
+     * Fleet status refresh interval.
+     *
+     * 60 seconds is deliberately used instead of a very short interval
+     * so that the dashboard does not continuously consume Firestore reads.
+     *
+     * The refresh runs ONLY while the Dashboard page is active.
+     */
     private static final long FLEET_REFRESH_SECONDS = 60;
 
+    /*
+     * Background scheduler used only for refreshing fleet status.
+     *
+     * It is a daemon thread, so it will not prevent the application
+     * from closing.
+     */
     private static ScheduledExecutorService fleetRefreshExecutor;
 
+    /*
+     * These references point to the EXISTING dashboard controls.
+     * We update them instead of rebuilding the dashboard.
+     */
     private static Label enRouteCount;
     private static Label chargingCount;
     private static Label idleCount;
@@ -56,7 +75,12 @@ public class AdminDashboard {
     private static ProgressBar idlePb;
     private static ProgressBar faultPb;
 
+    /*
+     * Prevents an old background refresh from updating the UI after
+     * the user has navigated away from Dashboard.
+     */
     private static volatile boolean dashboardPageActive = false;
+
 
     public static void show(Stage stage) {
 
@@ -145,6 +169,7 @@ public class AdminDashboard {
         window.show();
     }
 
+
     private static void setMiddleContent(javafx.scene.Node content) {
 
         if (middleBox == null) {
@@ -160,6 +185,7 @@ public class AdminDashboard {
             window.setMaximized(true);
         }
     }
+
 
     public static void goTo(String page) {
 
@@ -178,6 +204,7 @@ public class AdminDashboard {
             sidebar.getSelectionModel().select(page);
         }
     }
+
 
     public static void openNotifications() {
 
@@ -204,6 +231,7 @@ public class AdminDashboard {
         );
     }
 
+
     public static void openNewRoute() {
 
         stopFleetStatusRefresh();
@@ -225,6 +253,7 @@ public class AdminDashboard {
         );
     }
 
+
     public static void openProfile() {
 
         stopFleetStatusRefresh();
@@ -245,6 +274,7 @@ public class AdminDashboard {
                 "ChargeOn · Profile"
         );
     }
+
 
     public static void openSubscriptionPlanManagement() {
 
@@ -271,12 +301,17 @@ public class AdminDashboard {
         );
     }
 
+
     private static void showPage(String page) {
 
         if (page == null) {
             return;
         }
 
+        /*
+         * Only the Dashboard page should continuously refresh
+         * fleet status.
+         */
         if ("Dashboard".equals(page)) {
 
             dashboardPageActive = true;
@@ -285,6 +320,7 @@ public class AdminDashboard {
 
             stopFleetStatusRefresh();
         }
+
 
         switch (page) {
 
@@ -302,9 +338,14 @@ public class AdminDashboard {
                         buildMainContent()
                 );
 
+                /*
+                 * Start the low-frequency fleet refresh AFTER the
+                 * dashboard controls have been created.
+                 */
                 startFleetStatusRefresh();
 
                 break;
+
 
             case "Live Monitoring":
 
@@ -322,6 +363,7 @@ public class AdminDashboard {
 
                 break;
 
+
             case "Fleet Management":
 
                 heading.setText(
@@ -337,6 +379,7 @@ public class AdminDashboard {
                 );
 
                 break;
+
 
             case "Revenue":
 
@@ -354,6 +397,7 @@ public class AdminDashboard {
 
                 break;
 
+
             case "Support":
 
                 heading.setText(
@@ -370,6 +414,7 @@ public class AdminDashboard {
 
                 break;
 
+
             case "Users & Drivers":
 
                 heading.setText(
@@ -385,6 +430,7 @@ public class AdminDashboard {
                 );
 
                 break;
+
 
             case "AI Assistant":
 
@@ -408,6 +454,7 @@ public class AdminDashboard {
     );
                 break;
 
+
             default:
                 return;
         }
@@ -416,6 +463,7 @@ public class AdminDashboard {
                 "ChargeOn · " + page
         );
     }
+
 
     private static final AdminDashboardController dashboardController =
             new AdminDashboardController();
@@ -426,10 +474,15 @@ public class AdminDashboard {
     private static final BusController busController =
             new BusController();
 
+    /** Keeps the dashboard feed a summary; the full list lives in Notifications. */
     private static final int ACTIVITY_FEED_LIMIT = 6;
+
 
     static ScrollPane buildMainContent() {
 
+        /*
+         * Reset old references before building a new dashboard.
+         */
         enRouteCount = null;
         chargingCount = null;
         idleCount = null;
@@ -466,6 +519,7 @@ public class AdminDashboard {
             );
         }
 
+
         Label busesOnlineVal =
                 kpiValueLabel(
                         data.busesOnlineLabel(),
@@ -476,6 +530,7 @@ public class AdminDashboard {
                 kpiSubLabel(
                         data.fleetSubLabel()
                 );
+
 
         Label bookingsVal =
                 kpiValueLabel(
@@ -488,6 +543,7 @@ public class AdminDashboard {
                         data.bookingsBreakdown()
                 );
 
+
         Label revenueVal =
                 kpiValueLabel(
                         data.revenueTodayFormatted(),
@@ -498,6 +554,7 @@ public class AdminDashboard {
                 kpiSubLabel(
                         "Today's charging revenue"
                 );
+
 
         Label ticketsVal =
                 kpiValueLabel(
@@ -510,6 +567,7 @@ public class AdminDashboard {
                         data.ticketsSubLabel()
                 );
 
+
         HBox kpiRow = buildKpiRow(
                 busesOnlineVal, busesOnlineSub,
                 bookingsVal, bookingsSub,
@@ -517,11 +575,18 @@ public class AdminDashboard {
                 ticketsVal, ticketsSub
         );
 
+
         int total =
                 Math.max(
                         data.fleetStatus.total,
                         1
                 );
+
+
+        /*
+         * Store these existing controls in static references so
+         * the refresh mechanism can update them later.
+         */
 
         enRouteCount =
                 fleetCountLabel(
@@ -541,6 +606,7 @@ public class AdminDashboard {
                         (double) total
         );
 
+
         chargingCount =
                 fleetCountLabel(
                         String.valueOf(
@@ -558,6 +624,7 @@ public class AdminDashboard {
                 data.fleetStatus.charging /
                         (double) total
         );
+
 
         idleCount =
                 fleetCountLabel(
@@ -577,6 +644,7 @@ public class AdminDashboard {
                         (double) total
         );
 
+
         faultCount =
                 fleetCountLabel(
                         String.valueOf(
@@ -595,12 +663,14 @@ public class AdminDashboard {
                         (double) total
         );
 
+
         HBox middleRow = buildMiddleRow(
                 enRouteCount, enRoutePb,
                 chargingCount, chargingPb,
                 idleCount, idlePb,
                 faultCount, faultPb
         );
+
 
         content.getChildren().addAll(
                 bannerHolder,
@@ -611,6 +681,7 @@ public class AdminDashboard {
 
                 buildActivityFeed()
         );
+
 
         ScrollPane sp =
                 new ScrollPane(content);
@@ -626,8 +697,20 @@ public class AdminDashboard {
         return sp;
     }
 
+
+    /*
+     * ============================================================
+     * AUTOMATIC FLEET STATUS REFRESH
+     * ============================================================
+     */
+
+
     private static synchronized void startFleetStatusRefresh() {
 
+        /*
+         * If a refresh executor already exists, do not create
+         * another one.
+         */
         if (fleetRefreshExecutor != null
                 && !fleetRefreshExecutor.isShutdown()
                 && !fleetRefreshExecutor.isTerminated()) {
@@ -635,8 +718,15 @@ public class AdminDashboard {
             return;
         }
 
+
         dashboardPageActive = true;
 
+
+        /*
+         * Daemon thread:
+         * it will not keep the application alive after the window
+         * is closed.
+         */
         fleetRefreshExecutor =
                 Executors.newSingleThreadScheduledExecutor(
                         runnable -> {
@@ -653,8 +743,19 @@ public class AdminDashboard {
                         }
                 );
 
+
+        /*
+         * Run the first refresh immediately.
+         *
+         * The dashboard has already performed its initial load,
+         * so this simply confirms the latest Firebase state.
+         */
         refreshFleetStatus();
 
+
+        /*
+         * Then refresh once every 60 seconds.
+         */
         fleetRefreshExecutor.scheduleAtFixedRate(
                 AdminDashboard::refreshFleetStatus,
                 FLEET_REFRESH_SECONDS,
@@ -663,9 +764,11 @@ public class AdminDashboard {
         );
     }
 
+
     private static synchronized void stopFleetStatusRefresh() {
 
         dashboardPageActive = false;
+
 
         if (fleetRefreshExecutor != null) {
 
@@ -675,23 +778,53 @@ public class AdminDashboard {
         }
     }
 
+
     private static void refreshFleetStatus() {
 
+        /*
+         * Do not perform any Firebase read if the user has already
+         * left the Dashboard page.
+         */
         if (!dashboardPageActive) {
             return;
         }
 
+
         try {
 
+            /*
+             * This performs ONLY the fleet-status read.
+             *
+             * We deliberately do NOT call:
+             *
+             * dashboardController.load()
+             *
+             * because that would also read bookings, revenue,
+             * tickets and low-battery information.
+             */
             BusController.FleetStatusCounts status =
                     busController.getFleetStatusCounts();
 
+
+            /*
+             * JavaFX controls MUST be updated on the JavaFX
+             * Application Thread.
+             */
             Platform.runLater(() -> {
 
+                /*
+                 * The user may have navigated away while Firebase
+                 * was being read.
+                 */
                 if (!dashboardPageActive) {
                     return;
                 }
 
+
+                /*
+                 * The dashboard may have been rebuilt while the
+                 * background request was running.
+                 */
                 if (enRouteCount == null
                         || chargingCount == null
                         || idleCount == null
@@ -704,17 +837,26 @@ public class AdminDashboard {
                     return;
                 }
 
+
                 updateFleetStatusUI(status);
             });
 
+
         } catch (Exception e) {
 
+            /*
+             * Do not crash the dashboard if one refresh fails.
+             *
+             * The existing displayed values remain visible and
+             * the next scheduled refresh will try again.
+             */
             System.err.println(
                     "Fleet status refresh failed: "
                             + e.getMessage()
             );
         }
     }
+
 
     private static void updateFleetStatusUI(
             BusController.FleetStatusCounts status) {
@@ -725,6 +867,10 @@ public class AdminDashboard {
                         1
                 );
 
+
+        /*
+         * Update counts.
+         */
         enRouteCount.setText(
                 String.valueOf(
                         status.enRoute
@@ -749,6 +895,10 @@ public class AdminDashboard {
                 )
         );
 
+
+        /*
+         * Update progress bars.
+         */
         enRoutePb.setProgress(
                 status.enRoute /
                         (double) total
@@ -770,6 +920,7 @@ public class AdminDashboard {
         );
     }
 
+
     private static String lowBatteryBusCodes(List<Bus> buses) {
 
         StringBuilder sb =
@@ -789,6 +940,7 @@ public class AdminDashboard {
         return sb.toString();
     }
 
+
     private static Label kpiValueLabel(
             String initialText,
             String color) {
@@ -807,6 +959,7 @@ public class AdminDashboard {
         return l;
     }
 
+
     private static Label kpiSubLabel(
             String initialText) {
 
@@ -821,6 +974,7 @@ public class AdminDashboard {
 
         return l;
     }
+
 
     private static HBox buildKpiRow(
             Label busesOnlineVal,
@@ -864,6 +1018,7 @@ public class AdminDashboard {
         return row;
     }
 
+
     private static VBox mutableStatCard(
             String title,
             Label valueLabel,
@@ -885,6 +1040,7 @@ public class AdminDashboard {
         return c;
     }
 
+
     private static HBox buildMiddleRow(
             Label enRouteCount,
             ProgressBar enRoutePb,
@@ -898,10 +1054,12 @@ public class AdminDashboard {
         HBox row =
                 new HBox(16);
 
+
         VBox fleetSplit =
                 card(
                         "Fleet status split"
                 );
+
 
         fleetSplit.getChildren().addAll(
 
@@ -934,10 +1092,12 @@ public class AdminDashboard {
                 )
         );
 
+
         HBox.setHgrow(
                 fleetSplit,
                 Priority.ALWAYS
         );
+
 
         VBox mapPreview =
                 card(
@@ -948,6 +1108,23 @@ public class AdminDashboard {
                 "card-highlight"
         );
 
+
+        /*
+         * ============================================================
+         * EXISTING MAP BOX
+         * ============================================================
+         *
+         * The size of this box is intentionally NOT changed.
+         *
+         * Existing height:
+         *     180px
+         *
+         * Existing map card width:
+         *     480px
+         *
+         * Only the old placeholder text is replaced with the
+         * interactive Gluon MapView.
+         */
         VBox mapBox =
                 new VBox();
 
@@ -967,9 +1144,34 @@ public class AdminDashboard {
                 Double.MAX_VALUE
         );
 
+
+        /*
+         * ============================================================
+         * GLUON MAP
+         * ============================================================
+         *
+         * Initial position is Maharashtra.
+         *
+         * The map is NOT recentered after this.
+         *
+         * Therefore:
+         *
+         *  - mouse scroll can zoom
+         *  - mouse dragging can move/pan
+         *  - zooming out does NOT return to Maharashtra
+         *  - moving the map does NOT get overridden by the
+         *    Firebase fleet refresh
+         *
+         * This is deliberately only a map preview. No buttons,
+         * markers, routes or additional controls are added here.
+         */
         MapView mapView =
                 new MapView();
 
+
+        /*
+         * Keep the exact existing map height.
+         */
         mapView.setPrefHeight(
                 180
         );
@@ -982,10 +1184,27 @@ public class AdminDashboard {
                 180
         );
 
+
+        /*
+         * Allow the map to occupy the full width of the
+         * existing rectangular map box.
+         */
         mapView.setMaxWidth(
                 Double.MAX_VALUE
         );
 
+
+        /*
+         * Maharashtra-centered initial view.
+         *
+         * Approximate center:
+         *
+         * Latitude  : 19.75
+         * Longitude : 75.70
+         *
+         * Zoom 6 gives a useful Maharashtra-level view while
+         * still showing surrounding areas.
+         */
         mapView.setCenter(
                 19.75,
                 75.70
@@ -995,15 +1214,29 @@ public class AdminDashboard {
                 6
         );
 
+
+        /*
+         * Let the map fill the existing map box vertically.
+         */
         VBox.setVgrow(
                 mapView,
                 Priority.ALWAYS
         );
 
+
+        /*
+         * Add ONLY the map to the existing map box.
+         */
         mapBox.getChildren().add(
                 mapView
         );
 
+
+        /*
+         * Keep the existing text below the map.
+         *
+         * No buttons or map controls are added.
+         */
         mapPreview.getChildren().addAll(
 
                 mapBox,
@@ -1014,22 +1247,30 @@ public class AdminDashboard {
                 )
         );
 
+
+        /*
+         * Existing map card width is preserved.
+         */
         mapPreview.setPrefWidth(
                 480
         );
+
 
         HBox.setHgrow(
                 mapPreview,
                 Priority.ALWAYS
         );
 
+
         row.getChildren().addAll(
                 fleetSplit,
                 mapPreview
         );
 
+
         return row;
     }
+
 
     private static VBox fleetRow(
             String labelText,
@@ -1047,6 +1288,7 @@ public class AdminDashboard {
                 Pos.CENTER_LEFT
         );
 
+
         Region sp =
                 new Region();
 
@@ -1054,6 +1296,7 @@ public class AdminDashboard {
                 sp,
                 Priority.ALWAYS
         );
+
 
         top.getChildren().addAll(
 
@@ -1072,13 +1315,16 @@ public class AdminDashboard {
                 countLabel
         );
 
+
         box.getChildren().addAll(
                 top,
                 pb
         );
 
+
         return box;
     }
+
 
     private static Label fleetCountLabel(
             String initialText,
@@ -1089,6 +1335,7 @@ public class AdminDashboard {
                 color
         );
     }
+
 
     private static ProgressBar fleetProgressBar(
             String color) {
@@ -1111,6 +1358,7 @@ public class AdminDashboard {
         return pb;
     }
 
+
     private static Label labelBold(
             String text,
             String color) {
@@ -1127,6 +1375,7 @@ public class AdminDashboard {
         return l;
     }
 
+
     private static VBox buildActivityFeed() {
 
         VBox section =
@@ -1140,6 +1389,7 @@ public class AdminDashboard {
                 new Insets(18)
         );
 
+
         section.getChildren().add(
                 label(
                         "Live activity",
@@ -1147,8 +1397,15 @@ public class AdminDashboard {
                 )
         );
 
+
+        /*
+         * The admin broadcast feed is the real activity stream:
+         * driver links, emergency dispatches/rejections and
+         * critical alerts all notify admins.
+         */
         List<Notification> feed =
                 notificationController.getAdminFeed();
+
 
         if (feed.isEmpty()) {
 
@@ -1168,11 +1425,13 @@ public class AdminDashboard {
             return section;
         }
 
+
         int shown =
                 Math.min(
                         feed.size(),
                         ACTIVITY_FEED_LIMIT
                 );
+
 
         for (int i = 0; i < shown; i++) {
 
@@ -1192,9 +1451,15 @@ public class AdminDashboard {
             );
         }
 
+
         return section;
     }
 
+
+    /**
+     * "Just now" / "6 min ago" / "3 h ago" / "2 d ago",
+     * or the raw value if unparseable.
+     */
     private static String relativeTime(
             String isoInstant) {
 
@@ -1203,6 +1468,7 @@ public class AdminDashboard {
 
             return "";
         }
+
 
         try {
 
@@ -1213,6 +1479,7 @@ public class AdminDashboard {
                             ),
                             java.time.Instant.now()
                     ).getSeconds();
+
 
             if (seconds < 60) {
                 return "Just now";
@@ -1228,14 +1495,17 @@ public class AdminDashboard {
                         + " h ago";
             }
 
+
             return (seconds / 86400)
                     + " d ago";
+
 
         } catch (Exception e) {
 
             return isoInstant;
         }
     }
+
 
     private static HBox logEntry(
             String dotColor,
@@ -1249,6 +1519,7 @@ public class AdminDashboard {
                 Pos.TOP_LEFT
         );
 
+
         Circle dot =
                 new Circle(
                         5,
@@ -1259,6 +1530,7 @@ public class AdminDashboard {
                 5
         );
 
+
         VBox textBox =
                 new VBox(2);
 
@@ -1266,6 +1538,7 @@ public class AdminDashboard {
                 textBox,
                 Priority.ALWAYS
         );
+
 
         Label textLabel =
                 new Label(text);
@@ -1279,6 +1552,7 @@ public class AdminDashboard {
                 true
         );
 
+
         textBox.getChildren().addAll(
 
                 textLabel,
@@ -1289,10 +1563,12 @@ public class AdminDashboard {
                 )
         );
 
+
         entry.getChildren().addAll(
                 dot,
                 textBox
         );
+
 
         return entry;
     }

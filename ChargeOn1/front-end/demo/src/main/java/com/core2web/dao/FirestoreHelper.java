@@ -199,6 +199,7 @@ public class FirestoreHelper {
         }
     }
 
+
     public static JSONObject toFirestoreFields(Map<String, Object> fields) {
         JSONObject result = new JSONObject();
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
@@ -384,6 +385,17 @@ public class FirestoreHelper {
         }
     }
 
+    /**
+     * True when {@code fieldName} holds an ISO-8601 instant string at or after
+     * {@code threshold}. False when absent or unparseable.
+     *
+     * <p>All timestamps in this app are written as {@code Instant.now().toString()},
+     * i.e. Firestore {@code stringValue}, not {@code timestampValue}. A structured
+     * query filter built from a Java {@link java.time.Instant} serialises to
+     * {@code timestampValue}, and Firestore never matches across value types — such
+     * a filter silently returns nothing. So date ranges must be applied in memory
+     * with this helper rather than pushed into {@link #queryWithFilters}.
+     */
     public static boolean isFieldOnOrAfter(JSONObject document, String fieldName, java.time.Instant threshold) {
         try {
             Instant value = DateTimeUtil.parse(getString(document, fieldName));

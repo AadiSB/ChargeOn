@@ -17,9 +17,11 @@ import com.core2web.util.DateTimeUtil;
 
 public class OwnerDashboardController {
 
+
     public static class DashboardData {
 
         public final Booking upcomingBooking;
+        /** Resolved busCode for {@link #upcomingBooking}, or "" — never a raw doc ID. */
         public final String  upcomingBusCode;
         public final int     bookingsThisMonth;
         public final int     completedCount;
@@ -70,6 +72,7 @@ public class OwnerDashboardController {
         }
     }
 
+
     public static class ActivityItem {
 
         public final String dotColor;
@@ -86,11 +89,13 @@ public class OwnerDashboardController {
         }
     }
 
+
     private final BookingDao bookingDao  = new BookingDao();
     private final ChargingSessionDao sessionDao = new ChargingSessionDao();
     private final WalletDao walletDao = new WalletDao();
     private final OwnerDao ownerDao = new OwnerDao();
     private final BusController busController = new BusController();
+
 
     public DashboardData load() {
 
@@ -121,6 +126,8 @@ public class OwnerDashboardController {
 
         ChargingSession activeSession = sessionDao.getActiveSession(uid, idToken);
 
+        // One fleet read; reused for the upcoming card and the activity feed so no
+        // user-facing string ever contains a raw bus document ID.
         Map<String, String> busCodes = busController.getBusCodeLookup();
 
         List<ActivityItem> activity = buildRecentActivity(
@@ -146,6 +153,7 @@ public class OwnerDashboardController {
         }
         return ownerDao.getCurrentOwner();
     }
+
 
     private List<ActivityItem> buildRecentActivity(
             String uid, String idToken,
@@ -200,6 +208,7 @@ public class OwnerDashboardController {
         return items.size() > 5 ? items.subList(0, 5) : items;
     }
 
+
     private String formatTimestamp(String iso) {
         if (iso == null || iso.isEmpty()) return "—";
         try {
@@ -228,6 +237,7 @@ public class OwnerDashboardController {
             return iso;
         }
     }
+
 
     private DashboardData emptyData() {
         return new DashboardData(null, "", 0, 0, 0, 0, 0.0, null, new ArrayList<>());

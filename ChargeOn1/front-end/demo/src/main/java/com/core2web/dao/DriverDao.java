@@ -1,3 +1,4 @@
+
 package com.core2web.dao;
 
 import java.net.URI;
@@ -26,10 +27,22 @@ public class DriverDao {
         client = HttpClient.newHttpClient();
     }
 
+
+
     public boolean addDriver(Driver driver, String password) {
         return createDriverAccount(driver, password) != null;
     }
 
+
+    /**
+     * Creates the driver (auth account + Firestore doc) and, when {@code busId} is
+     * given, links driver and bus in both directions. Returns the new driver uid, or
+     * null if either the account creation or the bidirectional link failed.
+     *
+     * <p>If the link fails the driver account is left in place but reported as a
+     * failure, because a half-written link is worse than an unassigned driver: the
+     * caller surfaces the error and the admin can re-assign from Users & Drivers.
+     */
     public String addDriverAndAssignBus(Driver driver, String password, String busId) {
 
         String uid = createDriverAccount(driver, password);
@@ -56,6 +69,14 @@ public class DriverDao {
         return uid;
     }
 
+
+    /**
+     * Writes Driver.assignedBusId and Bus.assignedDriverId together, then clears
+     * both kinds of stale pointer that a re-assignment can leave behind. Firestore
+     * REST gives us no multi-document transaction, so the bus side is written first
+     * and rolled back if the driver side fails — the invariant we protect is "never
+     * one side only".
+     */
     public boolean linkDriverAndBus(String driverUid, String busId, String idToken) {
 
         if (driverUid == null || driverUid.isEmpty() || busId == null || busId.isEmpty()) {
@@ -65,6 +86,7 @@ public class DriverDao {
 
         BusDao busDao = new BusDao();
 
+        // Whoever held this bus before us, read BEFORE we overwrite the pointer.
         com.core2web.model.Bus target = busDao.getBus(busId, idToken);
         String previousDriverUid = target == null ? null : target.getAssignedDriverId();
 
@@ -81,12 +103,17 @@ public class DriverDao {
             return false;
         }
 
+        // Release any OTHER bus this driver used to hold, so no bus keeps a stale
+        // pointer back to them.
         for (com.core2web.model.Bus other : busDao.getBusesForDriver(driverUid, idToken)) {
             if (!busId.equals(other.getId())) {
                 busDao.updateAssignedDriver(other.getId(), "", idToken);
             }
         }
 
+        // And release the PREVIOUS holder of this bus. Without this the old driver
+        // keeps claiming a bus that now belongs to someone else — exactly the drift
+        // where buses/{id}.assignedDriverId and Driver/{uid}.assignedBusId disagree.
         if (previousDriverUid != null
                 && !previousDriverUid.isEmpty()
                 && !"null".equals(previousDriverUid)
@@ -99,12 +126,15 @@ public class DriverDao {
         return true;
     }
 
+
+    /** Driver -> bus side of the link. Prefer {@link #linkDriverAndBus} so both sides move together. */
     public boolean updateAssignedBusId(String driverUid, String busId, String idToken) {
         return FirestoreHelper.updateFields(
                 COLLECTION, driverUid,
                 java.util.Map.of("assignedBusId", busId == null ? "" : busId),
                 idToken);
     }
+
 
     private String createDriverAccount(Driver driver, String password) {
 
@@ -119,6 +149,7 @@ public class DriverDao {
         }
 
         try {
+
 
             String authUrl =
                     "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key="
@@ -161,6 +192,8 @@ public class DriverDao {
                             HttpResponse.BodyHandlers.ofString()
                     );
 
+
+
             if (authResponse.statusCode() != 200) {
 
                 System.out.println(
@@ -172,6 +205,8 @@ public class DriverDao {
 
                 return null;
             }
+
+
 
             JSONObject authResult =
                     new JSONObject(authResponse.body());
@@ -191,7 +226,11 @@ public class DriverDao {
                 return null;
             }
 
+
+
             driver.setUid(uid);
+
+
 
             String idToken =
                     authResult.optString(
@@ -208,8 +247,12 @@ public class DriverDao {
                 return null;
             }
 
+
+
             JSONObject fields =
                     new JSONObject();
+
+
 
             fields.put(
                     "assignedBusId",
@@ -219,6 +262,8 @@ public class DriverDao {
                     )
             );
 
+
+
             fields.put(
                     "depot",
                     new JSONObject().put(
@@ -226,6 +271,8 @@ public class DriverDao {
                             driver.getDepot()
                     )
             );
+
+
 
             fields.put(
                     "email",
@@ -235,6 +282,8 @@ public class DriverDao {
                     )
             );
 
+
+
             fields.put(
                     "name",
                     new JSONObject().put(
@@ -242,6 +291,8 @@ public class DriverDao {
                             driver.getName()
                     )
             );
+
+
 
             try {
 
@@ -268,6 +319,8 @@ public class DriverDao {
                 return null;
             }
 
+
+
             fields.put(
                     "profileImageUrl",
                     new JSONObject().put(
@@ -275,6 +328,8 @@ public class DriverDao {
                             driver.getProfileImageUrl()
                     )
             );
+
+
 
             fields.put(
                     "shift",
@@ -284,6 +339,8 @@ public class DriverDao {
                     )
             );
 
+
+
             fields.put(
                     "status",
                     new JSONObject().put(
@@ -291,6 +348,8 @@ public class DriverDao {
                             driver.getStatus()
                     )
             );
+
+
 
             String firestoreUrl =
                     "https://firestore.googleapis.com/v1/projects/"
@@ -300,6 +359,7 @@ public class DriverDao {
                             + "/"
                             + uid;
 
+
             JSONObject firestoreBody =
                     new JSONObject();
 
@@ -307,6 +367,7 @@ public class DriverDao {
                     "fields",
                     fields
             );
+
 
             HttpRequest firestoreRequest =
                     HttpRequest.newBuilder()
@@ -327,11 +388,14 @@ public class DriverDao {
                             )
                             .build();
 
+
             HttpResponse<String> firestoreResponse =
                     client.send(
                             firestoreRequest,
                             HttpResponse.BodyHandlers.ofString()
                     );
+
+
 
             if (firestoreResponse.statusCode() == 200) {
 
@@ -350,6 +414,8 @@ public class DriverDao {
                 return uid;
             }
 
+
+
             System.out.println(
                     "Failed to create Driver Firestore document: "
                             + firestoreResponse.statusCode()
@@ -366,6 +432,8 @@ public class DriverDao {
             return null;
         }
     }
+
+
 
     public Driver getCurrentDriver() {
 
@@ -467,6 +535,8 @@ public class DriverDao {
         }
     }
 
+
+
     public List<Driver> getAllDrivers(String idToken) {
         List<JSONObject> docs = FirestoreHelper.listCollection(COLLECTION, idToken);
         List<Driver> drivers = new ArrayList<>();
@@ -481,6 +551,14 @@ public class DriverDao {
         return drivers;
     }
 
+
+    /**
+     * One driver by uid, as a single document read.
+     *
+     * <p>Deliberately not "scan {@link #getAllDrivers} and filter": that needs
+     * collection-wide {@code list} permission, which would force the security rules
+     * to let any signed-in user enumerate the whole roster just to resolve one name.
+     */
     public Driver getDriver(String uid, String idToken) {
         if (uid == null || uid.isEmpty() || "null".equals(uid)) {
             return null;
@@ -488,6 +566,7 @@ public class DriverDao {
         JSONObject doc = FirestoreHelper.getDocument(COLLECTION, uid, idToken);
         return doc == null ? null : fromDocument(uid, doc);
     }
+
 
     private Driver fromDocument(String uid, JSONObject doc) {
         JSONObject fields = doc.optJSONObject("fields");
@@ -507,6 +586,7 @@ public class DriverDao {
         driver.setProfileImageUrl(getStringField(fields, "profileImageUrl"));
         return driver;
     }
+
 
     public boolean updatePhone(String phone) {
 
@@ -594,6 +674,8 @@ public class DriverDao {
         }
     }
 
+
+
     public boolean updateProfileImageUrl(String imageUrl) {
 
         AuthSession session = AuthSession.getCurrent();
@@ -679,6 +761,8 @@ public class DriverDao {
             return false;
         }
     }
+
+
 
     private String getStringField(
             JSONObject fields,

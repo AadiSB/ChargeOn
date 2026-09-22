@@ -30,6 +30,7 @@ public class AddUserAccount {
         this.stage = stage;
     }
 
+
     public ScrollPane getMainContent() {
 
         VBox content = new VBox(16);
@@ -37,6 +38,7 @@ public class AddUserAccount {
         content.setPadding(
                 new Insets(16)
         );
+
 
         Button backButton =
                 new Button("←  Back to Users & Drivers");
@@ -53,6 +55,7 @@ public class AddUserAccount {
         backButton.setOnAction(
                 e -> goBack()
         );
+
 
         VBox pageHeader =
                 new VBox(4);
@@ -82,6 +85,7 @@ public class AddUserAccount {
                 subtitle
         );
 
+
         VBox formCard =
                 new VBox(14);
 
@@ -92,6 +96,7 @@ public class AddUserAccount {
         formCard.setPadding(
                 new Insets(20)
         );
+
 
         Label basicTitle =
                 new Label("Basic information");
@@ -124,6 +129,7 @@ public class AddUserAccount {
                         "Email address"
                 );
 
+
         VBox driverFields =
                 new VBox(14);
 
@@ -154,6 +160,7 @@ public class AddUserAccount {
                         "Password"
                 );
 
+
         Label successLabel =
                 new Label(
                         ""
@@ -175,6 +182,7 @@ public class AddUserAccount {
                 successLabel
         );
 
+
         formCard.setUserData(
                 new TextField[]{
                         nameField,
@@ -185,6 +193,7 @@ public class AddUserAccount {
                         passwordField
                 }
         );
+
 
         HBox actions =
                 new HBox(10);
@@ -220,6 +229,7 @@ public class AddUserAccount {
                 saveButton
         );
 
+
         formCard.getChildren().addAll(
                 basicTitle,
                 basicSubtitle,
@@ -229,6 +239,7 @@ public class AddUserAccount {
                 driverFields,
                 actions
         );
+
 
         VBox infoCard =
                 new VBox(8);
@@ -269,6 +280,7 @@ public class AddUserAccount {
                 infoText
         );
 
+
         content.getChildren().addAll(
                 backButton,
                 pageHeader,
@@ -289,6 +301,7 @@ public class AddUserAccount {
 
         return scrollPane;
     }
+
 
     private TextField createField(
             String prompt
@@ -322,6 +335,12 @@ public class AddUserAccount {
         return field;
     }
 
+
+    /**
+     * Only buses with no driver on them are offered, so an already-assigned bus
+     * cannot be picked at all — we filter the list instead of validating after the
+     * fact.
+     */
     private ComboBox<Bus> createBusCombo() {
 
         ComboBox<Bus> combo =
@@ -379,6 +398,7 @@ public class AddUserAccount {
         return combo;
     }
 
+
     private void saveAccount(
             TextField nameField,
             TextField phoneField,
@@ -391,8 +411,10 @@ public class AddUserAccount {
             Label successLabel
     ) {
 
+
         successLabel.setVisible(false);
         successLabel.setText("");
+
 
         String name =
                 nameField.getText().trim();
@@ -415,6 +437,9 @@ public class AddUserAccount {
         String shift =
                 shiftField.getText().trim();
 
+
+
+
         if (name.isEmpty()
                 || phone.isEmpty()
                 || email.isEmpty()
@@ -429,6 +454,7 @@ public class AddUserAccount {
             return;
         }
 
+
         if (selectedBus == null) {
 
             showError(
@@ -441,6 +467,7 @@ public class AddUserAccount {
             return;
         }
 
+
         if (!phone.matches("\\d{10}")) {
 
             showError(
@@ -450,6 +477,7 @@ public class AddUserAccount {
 
             return;
         }
+
 
         if (!email.matches(
                 "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"
@@ -462,6 +490,7 @@ public class AddUserAccount {
 
             return;
         }
+
 
         try {
 
@@ -479,13 +508,16 @@ public class AddUserAccount {
                             password
                     );
 
+
             if (success) {
+
 
                 showSuccess(
                         successLabel,
                         "Driver added successfully and assigned to "
                                 + selectedBus.getBusCode() + "."
                 );
+
 
                 nameField.clear();
                 phoneField.clear();
@@ -494,6 +526,7 @@ public class AddUserAccount {
                 depotField.clear();
                 shiftField.clear();
 
+                // The chosen bus now has a driver, so drop it from the pool.
                 busCombo.getItems().remove(selectedBus);
                 busCombo.setValue(null);
                 busCombo.setPromptText(
@@ -502,6 +535,7 @@ public class AddUserAccount {
                                 : "Assigned bus"
                 );
             }
+
 
             else {
 
@@ -522,6 +556,7 @@ public class AddUserAccount {
         }
     }
 
+
     private void showSuccess(
             Label label,
             String message
@@ -539,6 +574,7 @@ public class AddUserAccount {
         label.setVisible(true);
     }
 
+
     private void showError(
             Label label,
             String message
@@ -555,6 +591,7 @@ public class AddUserAccount {
 
         label.setVisible(true);
     }
+
 
     private void goBack() {
 

@@ -12,6 +12,11 @@ public class NotificationController {
     private final NotificationDao notificationDAO =
             new NotificationDao();
 
+
+    // ============================================================
+    // CURRENT USER NOTIFICATIONS
+    // ============================================================
+
     public List<Notification> getMyNotifications() {
 
         AuthSession session =
@@ -29,6 +34,11 @@ public class NotificationController {
         );
     }
 
+
+    // ============================================================
+    // ADMIN FEED
+    // ============================================================
+
     public List<Notification> getAdminFeed() {
 
         AuthSession session =
@@ -45,6 +55,11 @@ public class NotificationController {
         );
     }
 
+
+    // ============================================================
+    // OWNER DRIVER NOTIFICATIONS
+    // ============================================================
+
     public List<Notification> getOwnerDriverNotifications() {
 
         AuthSession session =
@@ -54,6 +69,12 @@ public class NotificationController {
             return new ArrayList<>();
         }
 
+        /*
+         * Keep the existing owner-only behavior.
+         *
+         * The ownerId passed to NotificationDao is the Firebase
+         * Authentication UID.
+         */
         if (!"owner".equals(session.getRole())) {
 
             return new ArrayList<>();
@@ -66,6 +87,11 @@ public class NotificationController {
                 )
         );
     }
+
+
+    // ============================================================
+    // SORT NEWEST FIRST
+    // ============================================================
 
     private static List<Notification> newestFirst(
             List<Notification> notifications) {
@@ -85,6 +111,7 @@ public class NotificationController {
         return notifications;
     }
 
+
     private static String safeCreatedAt(
             Notification notification) {
 
@@ -96,6 +123,11 @@ public class NotificationController {
 
         return notification.getCreatedAt();
     }
+
+
+    // ============================================================
+    // NORMAL USER NOTIFICATION
+    // ============================================================
 
     public void notifyUser(
             String userId,
@@ -126,6 +158,11 @@ public class NotificationController {
         );
     }
 
+
+    // ============================================================
+    // ADMIN NOTIFICATION
+    // ============================================================
+
     public void notifyAdmins(
             String type,
             String message,
@@ -152,6 +189,11 @@ public class NotificationController {
                 session.getIdToken()
         );
     }
+
+
+    // ============================================================
+    // OWNER DRIVER UPDATE
+    // ============================================================
 
     public void notifyOwnerOfDriverUpdate(
             String ownerId,

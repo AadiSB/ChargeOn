@@ -10,6 +10,10 @@ public class Bus {
     private String assignedDriverId;
     private String createdAt;
 
+    // Position deliberately does NOT live here — see model/BusLocation.java. A bus
+    // with no BusLocation document has an unknown position, which is a distinct
+    // state from 0,0 and must stay distinguishable.
+
     public Bus() {}
 
     public Bus(String id, String busCode, String status, double batteryLevel,
@@ -23,6 +27,7 @@ public class Bus {
         this.createdAt = createdAt;
     }
 
+
     public String getId()               { return id; }
     public String getBusCode()          { return busCode; }
     public String getStatus()           { return status; }
@@ -30,6 +35,7 @@ public class Bus {
     public String getDepot()            { return depot; }
     public String getAssignedDriverId() { return assignedDriverId; }
     public String getCreatedAt()        { return createdAt; }
+
 
     public void setId(String id)                             { this.id = id; }
     public void setBusCode(String busCode)                   { this.busCode = busCode; }

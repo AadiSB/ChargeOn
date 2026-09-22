@@ -315,13 +315,14 @@ public class LoginPage extends Application {
         HBox.setHgrow(leftSection, Priority.ALWAYS);
         HBox.setHgrow(rightSection, Priority.ALWAYS);
 
+
         double sceneWidth = AppWindowSize.width();
         double sceneHeight = AppWindowSize.height();
 
         Scene scene = new Scene(hb, sceneWidth, sceneHeight, Color.valueOf("#2A2F35"));
         loginPageScene = scene;
         loginPageStage.setScene(loginPageScene);
-
+       
         loginPageStage.show();
     }
 
